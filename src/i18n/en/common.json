@@ -1,0 +1,24 @@
+{
+  "welcome": "Welcome to Accessibility Tool",
+  "errors": {
+    "not_found": "Resource not found",
+    "unauthorized": "Unauthorized access",
+    "forbidden": "Forbidden access",
+    "validation": "Validation error",
+    "server_error": "Internal server error"
+  },
+  "auth": {
+    "login_success": "Logged in successfully",
+    "login_failed": "Login failed",
+    "register_success": "Registered successfully",
+    "logout_success": "Logged out successfully",
+    "password_reset": "Password reset email sent",
+    "email_verified": "Email verified successfully"
+  },
+  "subscription": {
+    "created": "Subscription created successfully",
+    "updated": "Subscription updated successfully",
+    "canceled": "Subscription canceled successfully",
+    "renewed": "Subscription renewed successfully"
+  }
+}

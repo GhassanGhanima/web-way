@@ -21,78 +21,247 @@
   <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
   [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
 
-## Description
+# Accessibility Tool API
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+A comprehensive web accessibility tool that helps make websites accessible to all users, with subscription-based access, analytics, and powerful customization options.
 
-## Project setup
+## Features
+
+- **Accessibility Tool**: JavaScript-based tool that enhances website accessibility
+- **API Versioning**: Support for multiple API versions to ensure backward compatibility
+- **Authentication**: JWT-based authentication with Google OAuth integration
+- **User Management**: Complete user management with roles and permissions
+- **Subscription System**: Tiered subscription plans with various features
+- **Payment Processing**: Secure payment processing with Stripe integration
+- **CDN**: Secure content delivery network for JavaScript assets
+- **Analytics**: Comprehensive usage tracking and reporting
+- **Internationalization**: Multi-language support
+- **Admin Dashboard**: Full administrative controls
+- **Comprehensive Documentation**: Swagger API documentation
+
+## Tech Stack
+
+- **Framework**: NestJS
+- **Language**: TypeScript
+- **Database**: PostgreSQL with TypeORM
+- **Authentication**: JWT, Passport
+- **Documentation**: Swagger/OpenAPI
+- **Caching**: Redis
+- **Email**: Nodemailer
+- **Testing**: Jest
+- **Containerization**: Docker
+
+## Getting Started
+
+### Prerequisites
+
+- Node.js (v18+)
+- PostgreSQL
+- Redis (for production)
+
+### Installation
+
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/yourusername/accessibility-tool-api.git
+   cd accessibility-tool-api
+   ```
+
+2. Install dependencies:
+   ```bash
+   npm install
+   ```
+
+3. Configure environment variables:
+   ```bash
+   cp .env.example .env
+   # Edit .env with your configuration
+   ```
+
+4. Run database migrations:
+   ```bash
+   npm run migration:run
+   ```
+
+5. Start the development server:
+   ```bash
+   npm run start:dev
+   ```
+
+### Docker Setup
+
+You can also run the application using Docker:
 
 ```bash
-$ npm install
+# Build and start the containers
+docker-compose up -d
+
+# Run migrations
+docker-compose exec app npm run migration:run
 ```
 
-## Compile and run the project
+## Project Structure
 
-```bash
-# development
-$ npm run start
-
-# watch mode
-$ npm run start:dev
-
-# production mode
-$ npm run start:prod
+```
+accessibility-tool-api/
+├── src/
+│   ├── common/              # Shared utilities and modules
+│   │   ├── cache/           # Caching functionality
+│   │   ├── decorators/      # Custom decorators
+│   │   ├── email/           # Email service
+│   │   ├── filters/         # Global exception filters
+│   │   ├── health/          # Health checks
+│   │   ├── i18n/            # Internationalization
+│   │   ├── interceptors/    # HTTP interceptors
+│   │   ├── logging/         # Logging configuration
+│   │   ├── pipes/           # Custom validation pipes
+│   │   └── tasks/           # Background task processing
+│   ├── config/              # Configuration modules
+│   ├── database/            # Database migrations and seeds
+│   ├── i18n/                # Translation files
+│   ├── modules/             # Feature modules
+│   │   ├── admin/           # Admin functionality
+│   │   ├── analytics/       # Usage analytics
+│   │   ├── auth/            # Authentication
+│   │   ├── cdn/             # Content delivery
+│   │   ├── integrations/    # Website integrations
+│   │   ├── payments/        # Payment processing
+│   │   ├── plans/           # Subscription plans
+│   │   ├── reporting/       # Reporting functionality
+│   │   ├── subscriptions/   # User subscriptions
+│   │   └── users/           # User management
+│   ├── templates/           # Email templates
+│   ├── app.controller.ts    # Main controller
+│   ├── app.module.ts        # Main module
+│   ├── app.service.ts       # Main service
+│   └── main.ts              # Application entry point
+├── test/                    # Test files
+├── .env.example             # Example environment variables
+├── .eslintrc.js             # ESLint configuration
+├── .prettierrc              # Prettier configuration
+├── docker-compose.yml       # Docker configuration
+├── Dockerfile               # Docker build file
+├── nest-cli.json            # NestJS CLI configuration
+├── package.json             # Dependencies and scripts
+└── tsconfig.json            # TypeScript configuration
 ```
 
-## Run tests
+## API Documentation
+
+The API documentation is available at `/api/docs` when the server is running. It provides comprehensive information about all endpoints, including request and response formats, authentication requirements, and available operations.
+
+## Authentication
+
+The API supports two authentication methods:
+
+1. **JWT Authentication**: For programmatic access using access and refresh tokens
+2. **Google OAuth**: For user-friendly login via Google accounts
+
+### JWT Authentication
+
+To authenticate with JWT:
+
+1. Obtain a token by logging in via `/api/v1/auth/login`
+2. Include the token in the Authorization header: `Authorization: Bearer <token>`
+3. Refresh expired tokens using `/api/v1/auth/refresh`
+
+### Google OAuth
+
+To authenticate with Google:
+
+1. Redirect users to `/api/v1/auth/google`
+2. Users will be redirected back to your application after authentication
+3. The redirect will include a JWT token for subsequent API calls
+
+## Development
+
+### Code Style
+
+We use ESLint and Prettier to maintain code quality:
 
 ```bash
-# unit tests
-$ npm run test
+# Run linting
+npm run lint
 
-# e2e tests
-$ npm run test:e2e
+# Fix linting issues
+npm run lint:fix
 
-# test coverage
-$ npm run test:cov
+# Format code
+npm run format
+```
+
+### Testing
+
+```bash
+# Run unit tests
+npm run test
+
+# Run e2e tests
+npm run test:e2e
+
+# Generate test coverage report
+npm run test:cov
+```
+
+### Database Migrations
+
+```bash
+# Generate a new migration
+npm run migration:generate -- -n MigrationName
+
+# Run pending migrations
+npm run migration:run
+
+# Revert the last migration
+npm run migration:revert
 ```
 
 ## Deployment
 
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
+### Production Setup
 
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
+For production deployment, ensure these environment variables are properly configured:
 
-```bash
-$ npm install -g @nestjs/mau
-$ mau deploy
-```
+- Database connection details
+- JWT secrets
+- Email configuration
+- Redis cache settings
+- Stripe API keys
+- Google OAuth credentials
 
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
+### Deployment Options
 
-## Resources
+1. **Docker Deployment**:
+   ```bash
+   docker build -t accessibility-tool-api .
+   docker run -p 3000:3000 --env-file .env.production accessibility-tool-api
+   ```
 
-Check out a few resources that may come in handy when working with NestJS:
+2. **Cloud Providers**:
+   - AWS Elastic Beanstalk
+   - Google Cloud Run
+   - Heroku
+   - Azure App Service
 
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
+3. **Manual Deployment**:
+   ```bash
+   npm run build
+   npm run start:prod
+   ```
 
-## Support
+## Performance Optimization
 
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
+For optimal performance:
 
-## Stay in touch
-
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
+1. Enable Redis caching in production
+2. Configure proper database indexes
+3. Set up a CDN for static assets
+4. Use horizontal scaling for high traffic
 
 ## License
 
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+This project is licensed under the MIT License - see the LICENSE file for details.
+
+## Support
+
+For support, contact our team at support@example.com or open an issue on GitHub.

@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Accessibility Widget - Demo Page</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', sans-serif;
+      line-height: 1.6;
+      color: #333;
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    
+    h1, h2, h3 {
+      color: #4f46e5;
+    }
+    
+    a {
+      color: #4f46e5;
+      text-decoration: none;
+    }
+    
+    a:hover {
+      text-decoration: underline;
+    }
+    
+    button {
+      background-color: #4f46e5;
+      color: white;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    
+    button:hover {
+      background-color: #4338ca;
+    }
+    
+    code {
+      background-color: #f5f5f5;
+      padding: 2px 4px;
+      border-radius: 4px;
+      font-family: Monaco, monospace;
+    }
+    
+    .demo-controls {
+      margin: 40px 0;
+      padding: 20px;
+      background-color: #f9fafb;
+      border-radius: 8px;
+    }
+    
+    .demo-controls h2 {
+      margin-top: 0;
+    }
+    
+    .button-group {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Accessibility Widget Demo</h1>
+  
+  <p>
+    This page demonstrates the functionality of the Web Accessibility Widget.
+    The widget appears as a button in the corner of the screen and provides various accessibility options.
+  </p>
+  
+  <h2>Features Included</h2>
+  
+  <ul>
+    <li><strong>Contrast Modes</strong>: Normal, High Contrast, and Inverted colors</li>
+    <li><strong>Font Size Adjustment</strong>: Increase or decrease text size</li>
+    <li><strong>Reading Guide</strong>: A horizontal bar that follows your cursor to help track text</li>
+    <li><strong>Text-to-Speech</strong>: Click on text to have it read aloud</li>
+    <li><strong>Keyboard Navigation</strong>: Enhanced focus indicators for keyboard users</li>
+  </ul>
+  
+  <h2>Sample Content</h2>
+  
+  <p>
+    Web accessibility means that websites, tools, and technologies are designed and developed
+    so that people with disabilities can use them. More specifically, people can:
+  </p>
+  
+  <ul>
+    <li>perceive, understand, navigate, and interact with the Web</li>
+    <li>contribute to the Web</li>
+  </ul>
+  
+  <p>
+    Web accessibility encompasses all disabilities that affect access to the Web, including:
+  </p>
+  
+  <ul>
+    <li>auditory</li>
+    <li>cognitive</li>
+    <li>neurological</li>
+    <li>physical</li>
+    <li>speech</li>
+    <li>visual</li>
+  </ul>
+  
+  <p>
+    Web accessibility also benefits people without disabilities, for example:
+  </p>
+  
+  <ul>
+    <li>people using mobile phones, smart watches, smart TVs, and other devices with small screens, different input modes, etc.</li>
+    <li>older people with changing abilities due to aging</li>
+    <li>people with "temporary disabilities" such as a broken arm or lost glasses</li>
+    <li>people with "situational limitations" such as in bright sunlight or in an environment where they cannot listen to audio</li>
+    <li>people using a slow Internet connection, or who have limited or expensive bandwidth</li>
+  </ul>
+  
+  <div class="demo-controls">
+    <h2>Control the Widget Programmatically</h2>
+    
+    <div class="button-group">
+      <button onclick="AccessibilityTool.open()">Open Menu</button>
+      <button onclick="AccessibilityTool.close()">Close Menu</button>
+    </div>
+    
+    <div class="button-group">
+      <button onclick="AccessibilityTool.setContrast('normal')">Normal Contrast</button>
+      <button onclick="AccessibilityTool.setContrast('high')">High Contrast</button>
+      <button onclick="AccessibilityTool.setContrast('invert')">Inverted Colors</button>
+    </div>
+    
+    <div class="button-group">
+      <button onclick="AccessibilityTool.adjustFontSize(-1)">Decrease Font</button>
+      <button onclick="AccessibilityTool.adjustFontSize(0)">Reset Font</button>
+      <button onclick="AccessibilityTool.adjustFontSize(1)">Increase Font</button>
+    </div>
+    
+    <div class="button-group">
+      <button onclick="AccessibilityTool.enableReadingGuide()">Enable Reading Guide</button>
+    </div>
+    
+    <h3>Set All Preferences</h3>
+    <code>
+      AccessibilityTool.setPreferences({
+        contrast: 'high',
+        fontSize: 2,
+        readingGuide: true,
+        textToSpeech: true,
+        keyboardNavigation: true
+      });
+    </code>
+    <div class="button-group">
+      <button onclick="AccessibilityTool.setPreferences({
+        contrast: 'high',
+        fontSize: 2,
+        readingGuide: true,
+        textToSpeech: true,
+        keyboardNavigation: true
+      })">Apply All Features</button>
+      
+      <button onclick="AccessibilityTool.setPreferences({
+        contrast: 'normal',
+        fontSize: 0,
+        readingGuide: false,
+        textToSpeech: false,
+        keyboardNavigation: false
+      })">Reset All Features</button>
+    </div>
+  </div>
+  
+  <h2>Integration Example</h2>
+  
+  <p>To add this widget to your website, include the following script in your HTML:</p>
+  
+  <pre><code>&lt;script src="https://accessibility-tool.example.com/api/v1/cdn/loader.js?apiKey=YOUR_API_KEY" async&gt;&lt;/script&gt;</code></pre>
+  
+  <script src="accessibility-widget.js"></script>
+  <script>
+    // Initialize the widget
+    document.addEventListener('DOMContentLoaded', function() {
+      AccessibilityTool.init({
+        apiKey: 'demo-key-123',
+        position: 'bottom-right'
+      });
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,24 @@
+{
+  "welcome": "Bienvenue à l'Outil d'Accessibilité",
+  "errors": {
+    "not_found": "Ressource non trouvée",
+    "unauthorized": "Accès non autorisé",
+    "forbidden": "Accès interdit",
+    "validation": "Erreur de validation",
+    "server_error": "Erreur interne du serveur"
+  },
+  "auth": {
+    "login_success": "Connecté avec succès",
+    "login_failed": "Échec de la connexion",
+    "register_success": "Enregistré avec succès",
+    "logout_success": "Déconnecté avec succès",
+    "password_reset": "Email de réinitialisation du mot de passe envoyé",
+    "email_verified": "Email vérifié avec succès"
+  },
+  "subscription": {
+    "created": "Abonnement créé avec succès",
+    "updated": "Abonnement mis à jour avec succès",
+    "canceled": "Abonnement annulé avec succès",
+    "renewed": "Abonnement renouvelé avec succès"
+  }
+}

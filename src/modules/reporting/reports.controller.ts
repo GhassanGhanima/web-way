@@ -1,0 +1,97 @@
+import { Controller, Get, Post, Body, Query, UseGuards, Version } from '@nestjs/common';
+import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiQuery } from '@nestjs/swagger';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { RolesGuard } from '../auth/guards/roles.guard';
+import { Roles, Role } from '@app/common/decorators/roles.decorator';
+import { ReportsService } from './reports.service';
+
+@ApiTags('reports')
+@Controller('reports')
+@UseGuards(JwtAuthGuard)
+@ApiBearerAuth()
+export class ReportsController {
+  constructor(private readonly reportsService: ReportsService) {}
+
+  @Get('usage')
+  @Version('1')
+  @ApiOperation({ summary: 'Get usage report' })
+  @ApiQuery({
+    name: 'integrationId',
+    required: false,
+    type: String,
+    description: 'Integration ID to filter report',
+  })
+  @ApiQuery({
+    name: 'startDate',
+    required: false,
+    type: Date,
+    description: 'Start date for the report period',
+  })
+  @ApiQuery({
+    name: 'endDate',
+    required: false,
+    type: Date,
+    description: 'End date for the report period',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Returns usage report data',
+  })
+  getUsageReport(
+    @Query('integrationId') integrationId?: string,
+    @Query('startDate') startDate?: Date,
+    @Query('endDate') endDate?: Date,
+  ): Promise<any> {
+    return this.reportsService.getUsageReport(integrationId, startDate, endDate);
+  }
+
+  @Get('subscription')
+  @Version('1')
+  @ApiOperation({ summary: 'Get subscription report' })
+  @ApiQuery({
+    name: 'startDate',
+    required: false,
+    type: Date,
+    description: 'Start date for the report period',
+  })
+  @ApiQuery({
+    name: 'endDate',
+    required: false,
+    type: Date,
+    description: 'End date for the report period',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Returns subscription report data',
+  })
+  getSubscriptionReport(
+    @Query('startDate') startDate?: Date,
+    @Query('endDate') endDate?: Date,
+  ): Promise<any> {
+    return this.reportsService.getSubscriptionReport(startDate, endDate);
+  }
+
+  @Post('export')
+  @Version('1')
+  @ApiOperation({ summary: 'Export report data' })
+  @ApiResponse({
+    status: 200,
+    description: 'Returns exported report data',
+  })
+  exportReport(@Body() exportOptions: any): Promise<any> {
+    return this.reportsService.exportReport(exportOptions);
+  }
+
+  @Post('schedule')
+  @Version('1')
+  @Roles(Role.ADMIN)
+  @UseGuards(RolesGuard)
+  @ApiOperation({ summary: 'Schedule a report' })
+  @ApiResponse({
+    status: 200,
+    description: 'Report scheduled successfully',
+  })
+  scheduleReport(@Body() scheduleOptions: any): Promise<any> {
+    return this.reportsService.scheduleReport(scheduleOptions);
+  }
+}
