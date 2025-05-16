@@ -24,7 +24,7 @@ export class AdminController {
     return this.adminService.getDashboardData();
   }
 
-  @Get('users/stats')
+  @Get('/users/stats')
   @Version('1')
   @ApiOperation({ summary: 'Get user statistics' })
   @ApiResponse({

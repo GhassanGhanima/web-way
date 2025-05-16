@@ -23,7 +23,7 @@ export class CreateUserDto {
   @ApiProperty({
     description: 'User first name',
     example: 'John',
-    required: false,
+    required: true,
   })
   @IsString()
   @IsOptional()
@@ -32,7 +32,7 @@ export class CreateUserDto {
   @ApiProperty({
     description: 'User last name',
     example: 'Doe',
-    required: false,
+    required: true,
   })
   @IsString()
   @IsOptional()

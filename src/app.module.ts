@@ -53,7 +53,6 @@ import { PaymentsModule } from './modules/payments/payments.module';
       }),
     }),
     LoggingModule,
-    I18nModule,
     HealthModule,
     CacheModule,
     TasksModule,
@@ -69,6 +68,8 @@ import { PaymentsModule } from './modules/payments/payments.module';
     AnalyticsModule,
     AdminModule,
     ReportsModule,
+    I18nModule,
+
   ],
   controllers: [AppController],
   providers: [
