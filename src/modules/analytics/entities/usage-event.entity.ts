@@ -44,24 +44,48 @@ export class UsageEvent extends BaseEntity {
     example: 'https://example.com/products',
     required: false,
   })
-  @Column({ nullable: true })
-  pageUrl: string | null;
+        @Column({
+    type: 'varchar',
+    length: 255,
+    nullable: true,
+    default: null,
+  })
+  pageUrl?: string;
+
+
 
   @ApiProperty({
     description: "User's IP address (anonymized)",
     example: '192.168.1.xxx',
     required: false,
   })
-  @Column({ nullable: true })
-  ipAddress: string | null;
+
+
+          @Column({
+    type: 'varchar',
+    length: 255,
+    nullable: true,
+    default: null,
+  })
+  ipAddress?: string;
+
+
 
   @ApiProperty({
     description: 'User agent information',
     example: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36...',
     required: false,
   })
-  @Column({ nullable: true })
-  userAgent: string | null;
+ 
+  
+
+          @Column({
+    type: 'varchar',
+    length: 255,
+    nullable: true,
+    default: null,
+  })
+  userAgent?: string;
 
   @ApiProperty({
     description: 'Additional event data',

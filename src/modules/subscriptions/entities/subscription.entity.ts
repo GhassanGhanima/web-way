@@ -76,8 +76,13 @@ export class Subscription extends BaseEntity {
     example: 'sub_1234567890',
     required: false,
   })
-  @Column({ nullable: true })
-  externalSubscriptionId: string | null;
+
+    @Column({
+    type: 'varchar',
+    length: 255,
+    nullable: true,
+  })
+  externalSubscriptionId?: string;
 
   @ApiProperty({
     description: 'Cancellation date if the subscription was canceled',
@@ -92,6 +97,12 @@ export class Subscription extends BaseEntity {
     example: 'Customer requested annual billing',
     required: false,
   })
-  @Column({ nullable: true })
-  notes: string | null;
+
+      @Column({
+    type: 'varchar',
+    length: 255,
+    nullable: true,
+  })
+  notes?: string;
+  
 }

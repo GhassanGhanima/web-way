@@ -33,7 +33,7 @@ services:
     environment:
       POSTGRES_PASSWORD: Test@1234
       POSTGRES_USER: web-way
-      POSTGRES_DB: accessibility_tool
+      POSTGRES_DB: web-way
     ports:
       - "5432:5432"
     volumes:

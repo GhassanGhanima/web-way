@@ -34,6 +34,10 @@ import { PaymentsModule } from './modules/payments/payments.module';
       inject: [ConfigService],
       useFactory: (configService: ConfigService) => ({
         ...configService.get('database'),
+          synchronize: false,
+    migrationsRun: false,
+    logging: true, // Enable logging for debugging
+    entitySkipConstructor: true // Try this to avoid constructor issues
       }),
     }),
     ThrottlerModule.forRootAsync({

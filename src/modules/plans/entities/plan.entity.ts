@@ -55,8 +55,12 @@ export class Plan extends BaseEntity {
     example: 'price_1234567890',
     required: false,
   })
-  @Column({ nullable: true })
-  externalPlanId: string | null;
+  @Column({
+    type: 'varchar',
+    length: 255,
+    nullable: true,
+  })
+  externalPlanId?: string;
 
   @ApiProperty({
     description: 'Maximum number of integrations allowed with this plan',

@@ -55,8 +55,14 @@ export class ScriptAsset extends BaseEntity {
     example: 'premium',
     required: false,
   })
-  @Column({ nullable: true })
-  requiredPlan: string | null;
+
+        @Column({
+    type: 'varchar',
+    length: 255,
+    nullable: true,
+  })
+  requiredPlan?: string;
+
 
   @ApiProperty({
     description: 'Whether the script is currently active',
