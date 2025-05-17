@@ -13,13 +13,13 @@ export abstract class BaseEntity {
     description: 'Creation timestamp',
     example: '2023-01-01T00:00:00Z',
   })
-  @CreateDateColumn({ type: 'timestamp with time zone' })
+  @CreateDateColumn({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
   createdAt: Date;
 
   @ApiProperty({
     description: 'Last update timestamp',
     example: '2023-01-01T00:00:00Z',
   })
-  @UpdateDateColumn({ type: 'timestamp with time zone' })
+  @UpdateDateColumn({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP', onUpdate: 'CURRENT_TIMESTAMP' })
   updatedAt: Date;
 }

@@ -6,7 +6,7 @@ export default registerAs('database', () => ({
   port: parseInt(process.env.DB_PORT || '5432', 10),
   username: process.env.DB_USERNAME || 'postgres',
   password: process.env.DB_PASSWORD || 'Test@1234',
-  database: process.env.DB_DATABASE || 'accessibility_tool',
+  database: process.env.DB_DATABASE || 'web-way',
   entities: [__dirname + '/../**/*.entity{.ts,.js}'],
   migrations: [__dirname + '/../database/migrations/*{.ts,.js}'],
   synchronize: process.env.DB_SYNCHRONIZE === 'true',

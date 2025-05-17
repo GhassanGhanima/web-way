@@ -9,6 +9,9 @@ services:
     environment:
       - DB_HOST=postgres
       - REDIS_HOST=redis
+      # Add this to prevent immediate exit
+      - NODE_OPTIONS=--unhandled-rejections=strict
+    command: ["sh", "-c", "tail -f /dev/null"]  # This will keep container running
     ports:
       - "3000:3000"
     depends_on:

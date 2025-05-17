@@ -9,7 +9,7 @@ RUN apk add --no-cache python3 make g++
 
 # Copy package files and install dependencies
 COPY package*.json ./
-RUN npm ci --legacy-peer-deps
+RUN npm ci  --force --legacy-peer-deps
 # Copy application code
 COPY . .
 
@@ -52,10 +52,10 @@ VOLUME ["/usr/src/app/assets", "/usr/src/app/logs"]
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=5s --start-period=5s --retries=3 \
-  CMD wget -qO- http://localhost:${PORT:-3000}/api/v1/health || exit 1
+  CMD wget -qO- http://localhost:3000/api/v1/health || exit 1
 
 # Expose the application port
-EXPOSE ${PORT:-3000}
+EXPOSE 3000
 
 # Start the application
 CMD ["node", "dist/main"]
