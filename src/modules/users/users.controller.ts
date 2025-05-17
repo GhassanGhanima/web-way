@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, Param, Post, Put, UseGuards, Version } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Post, Put, UseGuards, Version, Req, UseInterceptors, ClassSerializerInterceptor } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
 import { UsersService } from './users.service';
 import { User } from './entities/user.entity';
@@ -8,9 +8,11 @@ import { RolesGuard } from '../roles/guards/roles.guard';
 import { PermissionsGuard } from '../permissions/guards/permissions.guard';
 import { Roles, Role } from '@app/common/decorators/roles.decorator';
 import { Permissions, Permission } from '@app/common/decorators/permissions.decorator';
+import { Request } from 'express';
 
 @ApiTags('users')
 @Controller('users')
+@UseInterceptors(ClassSerializerInterceptor) // Add this line to automatically apply serialization
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
@@ -112,5 +114,35 @@ export class UsersController {
     @Body() data: { roleIds: string[] }
   ): Promise<User> {
     return this.usersService.assignRoles(id, data.roleIds);
+  }
+
+  @Get('me')
+  @Version('1')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Get detailed information about the authenticated user' })
+  @ApiResponse({
+    status: 200,
+    description: 'Returns the authenticated user details',
+    type: User,
+  })
+  getUserDetails(@Req() request: Request): Promise<User> {
+    const userId = (request.user as any).id;
+    return this.usersService.findOne(userId);
+  }
+
+  @Get(':id/details')
+  @Version('1')
+  @UseGuards(JwtAuthGuard, PermissionsGuard)
+  @Permissions(Permission.USER_READ)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Get complete user details including all relations' })
+  @ApiResponse({
+    status: 200,
+    description: 'Returns complete user details with all related data',
+    type: User,
+  })
+  getUserFullDetails(@Param('id') id: string): Promise<User> {
+    return this.usersService.findOneWithFullDetails(id);
   }
 }

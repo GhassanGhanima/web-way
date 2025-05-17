@@ -34,7 +34,6 @@ export class AuthService {
   }
 
   async register(createUserDto: CreateUserDto) {
-    console.log(createUserDto)
     const user = await this.usersService.create(createUserDto);
     return this.generateTokens(user);
   }
@@ -53,7 +52,15 @@ export class AuthService {
   }
 
   private generateTokens(user: any) {
-    const payload = { email: user.email, sub: user.id, roles: user.roles };
+    // Extract just the role names from the user's roles
+    const roleNames = user.roles ? user.roles.map(role => role.name) : [];
+    
+    // Simplified payload with just the essential information
+    const payload = { 
+      email: user.email, 
+      sub: user.id, 
+      roles: roleNames // Only include role names, not full role objects
+    };
     
     return {
       accessToken: this.jwtService.sign(payload),

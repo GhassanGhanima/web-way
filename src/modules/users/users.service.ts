@@ -33,6 +33,24 @@ export class UsersService {
     return user;
   }
 
+  async findOneWithFullDetails(id: string): Promise<User> {
+    const user = await this.usersRepository.findOne({
+      where: { id },
+      relations: [
+        'roles', 
+        'roles.permissions',
+        // Add any other relations you want to include for full details
+        // For example: 'subscriptions', 'integrations', etc.
+      ]
+    });
+    
+    if (!user) {
+      throw new NotFoundException(`User with ID ${id} not found`);
+    }
+    
+    return user;
+  }
+
   async findByEmail(email: string): Promise<User | null> {
     return this.usersRepository.findOne({ 
       where: { email },
