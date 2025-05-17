@@ -5,6 +5,15 @@ import { UsersService } from '../users/users.service';
 import { LoginDto } from './dtos/login.dto';
 import { CreateUserDto } from '../users/dtos/create-user.dto';
 
+// Move the interface outside the class
+export interface GoogleUserDto {
+  email: string;
+  firstName?: string;
+  lastName?: string;
+  avatarUrl?: string;
+  googleId: string;
+}
+
 @Injectable()
 export class AuthService {
   constructor(
@@ -51,7 +60,44 @@ export class AuthService {
     }
   }
 
-  private generateTokens(user: any) {
+  /**
+   * Validate a Google user or create if they don't exist
+   */
+  async validateOrCreateGoogleUser(googleUserDto: GoogleUserDto): Promise<any> {
+    // Check if user exists
+    let user = await this.usersService.findByEmail(googleUserDto.email);
+    
+    if (user) {
+      // Update Google ID if not already set
+      if (!user.googleId) {
+        user = await this.usersService.update(user.id, {
+          googleId: googleUserDto.googleId,
+          isEmailVerified: true, // Auto-verify email for Google accounts
+        });
+      }
+    } else {
+      // Create new user
+      const newUser = {
+        email: googleUserDto.email,
+        firstName: googleUserDto.firstName,
+        lastName: googleUserDto.lastName,
+        avatarUrl: googleUserDto.avatarUrl,
+        googleId: googleUserDto.googleId,
+        isEmailVerified: true,
+        // Generate a secure random password for users that register with OAuth
+        password: Math.random().toString(36).slice(-10) + Math.random().toString(36).slice(-10),
+      };
+      
+      user = await this.usersService.create(newUser);
+    }
+    
+    // Update last login timestamp
+    await this.usersService.updateLastLogin(user.id);
+    
+    return user;
+  }
+
+   generateTokens(user: any) {
     // Extract just the role names from the user's roles
     const roleNames = user.roles ? user.roles.map(role => role.name) : [];
     
