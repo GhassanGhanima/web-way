@@ -37,6 +37,26 @@ export class PopulatePermissions1747482012345 implements MigrationInterface {
       SELECT admin_role.id, read_perms.id FROM admin_role, read_perms
       ON CONFLICT DO NOTHING
     `);
+
+    // Add FAQ permissions
+    await queryRunner.query(`
+      INSERT INTO "permissions" (id, name, description, "createdAt", "updatedAt")
+      VALUES 
+        (uuid_generate_v4(), 'faq:read', 'Can read FAQ content', NOW(), NOW()),
+        (uuid_generate_v4(), 'faq:create', 'Can create FAQ entries', NOW(), NOW()),
+        (uuid_generate_v4(), 'faq:update', 'Can update FAQ entries', NOW(), NOW()),
+        (uuid_generate_v4(), 'faq:delete', 'Can delete FAQ entries', NOW(), NOW())
+      ON CONFLICT (name) DO NOTHING;
+    `);
+
+    // Assign FAQ permissions to admin role
+    await queryRunner.query(`
+      WITH admin_role AS (SELECT id FROM roles WHERE name = 'admin'),
+      faq_perms AS (SELECT id FROM permissions WHERE name LIKE 'faq:%')
+      INSERT INTO role_permissions ("roleId", "permissionId")
+      SELECT admin_role.id, faq_perms.id FROM admin_role, faq_perms
+      ON CONFLICT DO NOTHING;
+    `);
   }
 
   public async down(queryRunner: QueryRunner): Promise<void> {
