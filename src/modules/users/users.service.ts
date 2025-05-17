@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, In } from 'typeorm';
 import { User } from './entities/user.entity';
@@ -15,30 +15,69 @@ export class UsersService {
   ) {}
 
   async findAll(): Promise<User[]> {
-    return this.usersRepository.find();
+    return this.usersRepository.find({ 
+      relations: ['roles', 'roles.permissions'] 
+    });
   }
 
   async findOne(id: string): Promise<User> {
-    const user = await this.usersRepository.findOne({ where: { id } });
+    const user = await this.usersRepository.findOne({ 
+      where: { id },
+      relations: ['roles', 'roles.permissions']
+    });
+    
     if (!user) {
       throw new NotFoundException(`User with ID ${id} not found`);
     }
+    
     return user;
   }
 
   async findByEmail(email: string): Promise<User | null> {
-    return this.usersRepository.findOne({ where: { email } });
+    return this.usersRepository.findOne({ 
+      where: { email },
+      relations: ['roles', 'roles.permissions']
+    });
   }
 
   async create(createUserDto: CreateUserDto): Promise<User> {
+    // Check if email already exists
+    const existingUser = await this.findByEmail(createUserDto.email);
+    if (existingUser) {
+      throw new BadRequestException('Email already exists');
+    }
+
+    // Create a new user
     const user = this.usersRepository.create(createUserDto);
+    
+    // Assign default USER role
+    const defaultRole = await this.rolesRepository.findOne({ 
+      where: { name: 'user' } 
+    });
+    
+    if (defaultRole) {
+      user.roles = [defaultRole];
+    } else {
+      console.warn('Default user role not found! User will have no roles.');
+      user.roles = [];
+    }
+
+    // Save user with role assignment
     return this.usersRepository.save(user);
   }
 
   async update(id: string, updateData: Partial<User>): Promise<User> {
-    await this.findOne(id);
-    await this.usersRepository.update(id, updateData);
-    return this.findOne(id);
+    const user = await this.findOne(id);
+    
+    // Update user fields
+    Object.keys(updateData).forEach(key => {
+      // Don't allow password updates through this method
+      if (key !== 'password' && key !== 'roles') {
+        user[key] = updateData[key];
+      }
+    });
+    
+    return this.usersRepository.save(user);
   }
 
   async remove(id: string): Promise<void> {
@@ -46,19 +85,16 @@ export class UsersService {
     await this.usersRepository.remove(user);
   }
 
-  async updateLastLogin(id: string): Promise<void> {
+  async assignRoles(id: string, roleIds: string[]): Promise<User> {
+    const user = await this.findOne(id);
+    const roles = await this.rolesRepository.findByIds(roleIds);
+    
+    user.roles = roles;
+    return this.usersRepository.save(user);
+  }
+    async updateLastLogin(id: string): Promise<void> {
     await this.usersRepository.update(id, {
       lastLoginAt: new Date(),
     });
-  }
-
-  async assignRoles(userId: string, roleIds: string[]): Promise<User> {
-    const user = await this.findOne(userId);
-    const roles = await this.rolesRepository.find({
-      where: { id: In(roleIds) },
-    });
-
-    user.roles = roles;
-    return this.usersRepository.save(user);
   }
 }
