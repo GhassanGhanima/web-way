@@ -1,12 +1,15 @@
 import { Body, Controller, Delete, Get, Param, Post, Put, UseGuards, Version } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
-import { JwtAuthGuard } from '../guards/jwt-auth.guard';
-import { RolesGuard } from '../guards/roles.guard';
-import { PermissionsGuard } from '../guards/permissions.guard';
+import { JwtAuthGuard } from '@app/modules/auth/guards/jwt-auth.guard';
+import { RolesGuard } from '@app/modules/auth/guards/roles.guard';
+import { PermissionsGuard } from '@app/modules/auth/guards/permissions.guard';
 import { Roles, Role as RoleEnum } from '@app/common/decorators/roles.decorator';
 import { Permissions, Permission } from '@app/common/decorators/permissions.decorator';
-import { RolesService } from '../services/roles.service';
+import { RolesService } from '../roles.service';
 import { Role } from '../entities/role.entity';
+import { CreateRoleDto } from '../dtos/create-role.dto';
+import { UpdateRoleDto } from '../dtos/update-role.dto';
+import { AssignPermissionsDto } from '../dtos/assign-permissions.dto';
 
 @ApiTags('roles')
 @Controller('roles')
@@ -55,8 +58,8 @@ export class RolesController {
     description: 'The role has been successfully created',
     type: Role,
   })
-  create(@Body() roleData: Partial<Role>): Promise<Role> {
-    return this.rolesService.create(roleData);
+  create(@Body() createRoleDto: CreateRoleDto): Promise<Role> {
+    return this.rolesService.create(createRoleDto);
   }
 
   @Put(':id')
@@ -68,8 +71,8 @@ export class RolesController {
     description: 'The role has been successfully updated',
     type: Role,
   })
-  update(@Param('id') id: string, @Body() roleData: Partial<Role>): Promise<Role> {
-    return this.rolesService.update(id, roleData);
+  update(@Param('id') id: string, @Body() updateRoleDto: UpdateRoleDto): Promise<Role> {
+    return this.rolesService.update(id, updateRoleDto);
   }
 
   @Post(':id/permissions')
@@ -83,9 +86,9 @@ export class RolesController {
   })
   assignPermissions(
     @Param('id') id: string, 
-    @Body() data: { permissionIds: string[] }
+    @Body() assignPermissionsDto: AssignPermissionsDto
   ): Promise<Role> {
-    return this.rolesService.assignPermissions(id, data.permissionIds);
+    return this.rolesService.assignPermissions(id, assignPermissionsDto.permissionIds);
   }
 
   @Delete(':id')

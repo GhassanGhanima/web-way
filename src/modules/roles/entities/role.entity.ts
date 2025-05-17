@@ -1,7 +1,7 @@
 import { Column, Entity, JoinTable, ManyToMany } from 'typeorm';
 import { ApiProperty } from '@nestjs/swagger';
 import { BaseEntity } from '@app/common/entities/base.entity';
-import { Permission } from './permission.entity';
+import { Permission } from '@app/modules/permissions/entities/permission.entity';
 import { User } from '@app/modules/users/entities/user.entity';
 
 @Entity('roles')
@@ -20,7 +20,11 @@ export class Role extends BaseEntity {
   @Column({ nullable: true })
   description: string;
 
-  @ManyToMany(() => Permission)
+  @ApiProperty({
+    description: 'Permissions assigned to this role',
+    type: () => [Permission],
+  })
+  @ManyToMany(() => Permission, permission => permission.roles)
   @JoinTable({
     name: 'role_permissions',
     joinColumn: { name: 'roleId', referencedColumnName: 'id' },

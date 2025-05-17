@@ -3,7 +3,7 @@ import { Exclude } from 'class-transformer';
 import { ApiProperty } from '@nestjs/swagger';
 import * as bcrypt from 'bcrypt';
 import { BaseEntity } from '@app/common/entities/base.entity';
-import { Role } from '@app/modules/auth/entities/role.entity';
+import { Role } from '@app/modules/roles/entities/role.entity';
 
 @Entity('users')
 export class User extends BaseEntity {

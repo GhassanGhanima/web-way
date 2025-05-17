@@ -1,17 +1,13 @@
 import { Injectable, CanActivate, ExecutionContext } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
 import { PERMISSIONS_KEY } from '@app/common/decorators/permissions.decorator';
-import { Role } from '../entities/role.entity';
-import { Permission } from '../entities/permission.entity';
+import { RolesService } from '@app/modules/roles/roles.service';
 
 @Injectable()
 export class PermissionsGuard implements CanActivate {
   constructor(
     private reflector: Reflector,
-    @InjectRepository(Role)
-    private rolesRepository: Repository<Role>,
+    private rolesService: RolesService,
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
@@ -30,11 +26,7 @@ export class PermissionsGuard implements CanActivate {
     }
 
     // Get user with roles and permissions
-    const userWithRoles = await this.rolesRepository
-      .createQueryBuilder('role')
-      .innerJoin('role.users', 'user', 'user.id = :userId', { userId: user.id })
-      .leftJoinAndSelect('role.permissions', 'permission')
-      .getMany();
+    const userWithRoles = await this.rolesService.findUserRoles(user.id);
 
     // Extract all permissions from user's roles
     const userPermissions = new Set<string>();

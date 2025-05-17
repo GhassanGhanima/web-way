@@ -1,16 +1,13 @@
 import { Injectable, CanActivate, ExecutionContext } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
 import { Role as RoleEnum, ROLES_KEY } from '@app/common/decorators/roles.decorator';
-import { Role } from '../entities/role.entity';
+import { RolesService } from '@app/modules/roles/roles.service';
 
 @Injectable()
 export class RolesGuard implements CanActivate {
   constructor(
     private reflector: Reflector,
-    @InjectRepository(Role)
-    private rolesRepository: Repository<Role>,
+    private rolesService: RolesService,
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
@@ -29,10 +26,7 @@ export class RolesGuard implements CanActivate {
     }
 
     // Get user's roles from the database
-    const userRoles = await this.rolesRepository
-      .createQueryBuilder('role')
-      .innerJoin('role.users', 'user', 'user.id = :userId', { userId: user.id })
-      .getMany();
+    const userRoles = await this.rolesService.findUserRoles(user.id);
 
     // Extract role names
     const roleNames = userRoles.map(role => role.name);

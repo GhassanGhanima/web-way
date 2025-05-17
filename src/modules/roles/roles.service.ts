@@ -1,8 +1,8 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { Role } from '../entities/role.entity';
-import { Permission } from '../entities/permission.entity';
+import { Role } from './entities/role.entity';
+import { Permission } from '@app/modules/permissions/entities/permission.entity';
 
 @Injectable()
 export class RolesService {
@@ -55,5 +55,16 @@ export class RolesService {
   async remove(id: string): Promise<void> {
     const role = await this.findOne(id);
     await this.rolesRepository.remove(role);
+  }
+
+  /**
+   * Find all roles assigned to a user with their permissions
+   */
+  async findUserRoles(userId: string): Promise<Role[]> {
+    return this.rolesRepository
+      .createQueryBuilder('role')
+      .innerJoin('role.users', 'user', 'user.id = :userId', { userId })
+      .leftJoinAndSelect('role.permissions', 'permission')
+      .getMany();
   }
 }
