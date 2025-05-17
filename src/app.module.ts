@@ -2,7 +2,7 @@ import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { ThrottlerModule, ThrottlerModuleOptions } from '@nestjs/throttler';
-import { APP_FILTER, APP_INTERCEPTOR } from '@nestjs/core';
+import { APP_FILTER, APP_INTERCEPTOR, APP_GUARD } from '@nestjs/core';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { ConfigModule as AppConfigModule } from './config/config.module';
@@ -25,6 +25,7 @@ import { FilesModule } from './common/files/files.module';
 import { GlobalExceptionFilter } from './common/filters/global-exception.filter';
 import { TransformInterceptor } from './common/interceptors/transform.interceptor';
 import { PaymentsModule } from './modules/payments/payments.module';
+import { RolesGuard } from './modules/auth/guards/roles.guard';
 
 @Module({
   imports: [
@@ -52,6 +53,7 @@ import { PaymentsModule } from './modules/payments/payments.module';
         ],
       }),
     }),
+    UsersModule,
     LoggingModule,
     HealthModule,
     CacheModule,
@@ -59,7 +61,6 @@ import { PaymentsModule } from './modules/payments/payments.module';
     EmailModule,
     FilesModule,
     AuthModule,
-    UsersModule,
     PlansModule,
     SubscriptionsModule,
     PaymentsModule,

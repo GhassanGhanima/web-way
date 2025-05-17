@@ -1,9 +1,9 @@
-import { BeforeInsert, Column, Entity, OneToMany } from 'typeorm';
+import { BeforeInsert, Column, Entity, ManyToMany, JoinTable } from 'typeorm';
 import { Exclude } from 'class-transformer';
 import { ApiProperty } from '@nestjs/swagger';
 import * as bcrypt from 'bcrypt';
 import { BaseEntity } from '@app/common/entities/base.entity';
-import { Role } from '@app/common/decorators/roles.decorator';
+import { Role } from '@app/modules/auth/entities/role.entity';
 
 @Entity('users')
 export class User extends BaseEntity {
@@ -41,15 +41,13 @@ export class User extends BaseEntity {
 
   @ApiProperty({
     description: 'User roles',
-    enum: Role,
-    isArray: true,
-    example: [Role.USER],
+    type: () => [Role],
   })
-  @Column({
-    type: 'enum',
-    enum: Role,
-    array: true,
-    default: [Role.USER],
+  @ManyToMany(() => Role, role => role.users)
+  @JoinTable({
+    name: 'user_roles',
+    joinColumn: { name: 'userId', referencedColumnName: 'id' },
+    inverseJoinColumn: { name: 'roleId', referencedColumnName: 'id' },
   })
   roles: Role[];
 

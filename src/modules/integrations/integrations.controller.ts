@@ -5,7 +5,9 @@ import { Integration } from './entities/integration.entity';
 import { CreateIntegrationDto } from './dtos/create-integration.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
+import { PermissionsGuard } from '../auth/guards/permissions.guard';
 import { Roles, Role } from '@app/common/decorators/roles.decorator';
+import { Permissions, Permission } from '@app/common/decorators/permissions.decorator';
 
 @ApiTags('integrations')
 @Controller('integrations')
@@ -14,7 +16,8 @@ export class IntegrationsController {
 
   @Get()
   @Version('1')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, PermissionsGuard)
+  @Permissions(Permission.INTEGRATION_READ)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Get all integrations' })
   @ApiQuery({
@@ -34,7 +37,8 @@ export class IntegrationsController {
 
   @Get(':id')
   @Version('1')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, PermissionsGuard)
+  @Permissions(Permission.INTEGRATION_READ)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Get integration by ID' })
   @ApiResponse({
@@ -52,7 +56,8 @@ export class IntegrationsController {
 
   @Post()
   @Version('1')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, PermissionsGuard)
+  @Permissions(Permission.INTEGRATION_CREATE)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Create a new integration' })
   @ApiResponse({
@@ -66,7 +71,8 @@ export class IntegrationsController {
 
   @Put(':id')
   @Version('1')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, PermissionsGuard)
+  @Permissions(Permission.INTEGRATION_UPDATE)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Update an integration' })
   @ApiResponse({
@@ -80,7 +86,8 @@ export class IntegrationsController {
 
   @Delete(':id')
   @Version('1')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, PermissionsGuard)
+  @Permissions(Permission.INTEGRATION_DELETE)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Delete an integration' })
   @ApiResponse({
@@ -93,7 +100,8 @@ export class IntegrationsController {
 
   @Post(':id/verify')
   @Version('1')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, PermissionsGuard)
+  @Permissions(Permission.INTEGRATION_UPDATE)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Verify domain ownership' })
   @ApiResponse({

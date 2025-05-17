@@ -28,6 +28,17 @@ export enum Permission {
   // Analytics permissions
   ANALYTICS_READ = 'analytics:read',
   ANALYTICS_EXPORT = 'analytics:export',
+  
+  // Role permissions
+  ROLE_READ = 'role:read',
+  ROLE_CREATE = 'role:create',
+  ROLE_UPDATE = 'role:update',
+  ROLE_DELETE = 'role:delete',
+  ROLE_ASSIGN = 'role:assign',
+  
+  // Permission permissions
+  PERMISSION_READ = 'permission:read',
+  PERMISSION_ASSIGN = 'permission:assign',
 }
 
 export const PERMISSIONS_KEY = 'permissions';

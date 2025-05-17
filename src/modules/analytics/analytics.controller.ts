@@ -6,91 +6,97 @@ import { UsageEvent } from './entities/usage-event.entity';
 import { RecordEventDto } from './dtos/record-event.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
+import { PermissionsGuard } from '../auth/guards/permissions.guard';
 import { Roles, Role } from '@app/common/decorators/roles.decorator';
+import { Permissions, Permission } from '@app/common/decorators/permissions.decorator';
 
 @ApiTags('analytics')
 @Controller('analytics')
 export class AnalyticsController {
   constructor(private readonly analyticsService: AnalyticsService) {}
 
-  @Post('event')
+  @Get('events')
   @Version('1')
-  @ApiOperation({ summary: 'Record a usage event' })
-  @ApiResponse({
-    status: 201,
-    description: 'The event has been successfully recorded',
-    type: UsageEvent,
-  })
-  recordEvent(
-    @Body() recordEventDto: RecordEventDto,
-    @Req() request: Request,
-  ): Promise<UsageEvent> {
-    const ipAddress = request.ip || '127.0.0.1';
-    const userAgent = request.headers['user-agent'] || '';
-    
-    return this.analyticsService.recordEvent(recordEventDto, ipAddress, userAgent);
-  }
-
-  @Get('stats')
-  @Version('1')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, PermissionsGuard)
+  @Permissions(Permission.ANALYTICS_READ)
   @ApiBearerAuth()
-  @ApiOperation({ summary: 'Get analytics statistics' })
+  @ApiOperation({ summary: 'Get usage events' })
   @ApiQuery({
     name: 'integrationId',
-    required: true,
+    required: false,
     type: String,
-    description: 'Integration ID to get stats for',
+    description: 'Filter events by integration ID',
   })
   @ApiQuery({
     name: 'startDate',
-    required: true,
+    required: false,
     type: Date,
-    description: 'Start date for the stats period',
+    description: 'Start date for events',
   })
   @ApiQuery({
     name: 'endDate',
-    required: true,
+    required: false,
     type: Date,
-    description: 'End date for the stats period',
+    description: 'End date for events',
   })
   @ApiResponse({
     status: 200,
-    description: 'Returns analytics statistics',
+    description: 'Returns usage events',
+    type: [UsageEvent],
   })
-  getStats(
-    @Query('integrationId') integrationId: string,
-    @Query('startDate') startDate: Date,
-    @Query('endDate') endDate: Date,
-  ): Promise<any> {
-    return this.analyticsService.getEventStats(integrationId, startDate, endDate);
+  getEvents(
+    @Query('integrationId') integrationId?: string,
+    @Query('startDate') startDate?: Date,
+    @Query('endDate') endDate?: Date,
+  ): Promise<UsageEvent[]> {
+    return this.analyticsService.getEvents(integrationId, startDate, endDate);
   }
 
-  @Get('dashboard')
+  @Post('events')
   @Version('1')
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(Role.ADMIN)
+  @ApiOperation({ summary: 'Record usage event' })
+  @ApiResponse({
+    status: 201,
+    description: 'Event recorded successfully',
+    type: UsageEvent,
+  })
+  recordEvent(@Body() eventData: RecordEventDto, @Req() request: Request): Promise<UsageEvent> {
+    const clientIp = request.ip;
+    const userAgent = request.headers['user-agent'];
+    return this.analyticsService.recordEvent(eventData, clientIp, userAgent);
+  }
+
+  @Get('summary')
+  @Version('1')
+  @UseGuards(JwtAuthGuard, PermissionsGuard)
+  @Permissions(Permission.ANALYTICS_READ)
   @ApiBearerAuth()
-  @ApiOperation({ summary: 'Get analytics dashboard data' })
+  @ApiOperation({ summary: 'Get analytics summary' })
+  @ApiQuery({
+    name: 'integrationId',
+    required: false,
+    type: String,
+    description: 'Filter summary by integration ID',
+  })
   @ApiResponse({
     status: 200,
-    description: 'Returns dashboard analytics data',
+    description: 'Returns analytics summary',
   })
-  getDashboardData(): Promise<any> {
-    // For demonstration - would implement comprehensive dashboard stats
-    const startDate = new Date();
-    startDate.setMonth(startDate.getMonth() - 1);
-    const endDate = new Date();
-    
-    // This is a placeholder - would need to be implemented to return system-wide stats
-    return Promise.resolve({
-      totalEvents: 1000,
-      totalActiveIntegrations: 50,
-      mostActiveFeatures: [
-        { feature: 'contrast', count: 250 },
-        { feature: 'screenReader', count: 180 },
-        { feature: 'keyboardNavigation', count: 150 },
-      ],
-    });
+  getSummary(@Query('integrationId') integrationId?: string): Promise<any> {
+    return this.analyticsService.getSummary(integrationId);
+  }
+
+  @Post('export')
+  @Version('1')
+  @UseGuards(JwtAuthGuard, PermissionsGuard)
+  @Permissions(Permission.ANALYTICS_EXPORT)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Export analytics data' })
+  @ApiResponse({
+    status: 200,
+    description: 'Returns exported analytics data',
+  })
+  exportData(@Body() exportOptions: any): Promise<any> {
+    return this.analyticsService.exportData(exportOptions);
   }
 }

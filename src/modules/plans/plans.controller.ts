@@ -5,7 +5,9 @@ import { Plan } from './entities/plan.entity';
 import { CreatePlanDto } from './dtos/create-plan.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
+import { PermissionsGuard } from '../auth/guards/permissions.guard';
 import { Roles, Role } from '@app/common/decorators/roles.decorator';
+import { Permissions, Permission } from '@app/common/decorators/permissions.decorator';
 
 @ApiTags('plans')
 @Controller('plans')
@@ -14,6 +16,7 @@ export class PlansController {
 
   @Get()
   @Version('1')
+  @Permissions(Permission.PLAN_READ)
   @ApiOperation({ summary: 'Get all active subscription plans' })
   @ApiQuery({
     name: 'includeInactive',
@@ -32,6 +35,7 @@ export class PlansController {
 
   @Get(':id')
   @Version('1')
+  @Permissions(Permission.PLAN_READ)
   @ApiOperation({ summary: 'Get plan by ID' })
   @ApiResponse({
     status: 200,
@@ -48,8 +52,9 @@ export class PlansController {
 
   @Post()
   @Version('1')
-  @UseGuards(JwtAuthGuard, RolesGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard, PermissionsGuard)
   @Roles(Role.ADMIN)
+  @Permissions(Permission.PLAN_CREATE)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Create a new subscription plan' })
   @ApiResponse({
@@ -63,8 +68,9 @@ export class PlansController {
 
   @Put(':id')
   @Version('1')
-  @UseGuards(JwtAuthGuard, RolesGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard, PermissionsGuard)
   @Roles(Role.ADMIN)
+  @Permissions(Permission.PLAN_UPDATE)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Update a subscription plan' })
   @ApiResponse({
@@ -78,8 +84,9 @@ export class PlansController {
 
   @Delete(':id')
   @Version('1')
-  @UseGuards(JwtAuthGuard, RolesGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard, PermissionsGuard)
   @Roles(Role.ADMIN)
+  @Permissions(Permission.PLAN_DELETE)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Delete a subscription plan' })
   @ApiResponse({
@@ -92,6 +99,7 @@ export class PlansController {
 
   @Get('compare')
   @Version('1')
+  @Permissions(Permission.PLAN_READ)
   @ApiOperation({ summary: 'Compare multiple plans' })
   @ApiQuery({
     name: 'planIds',

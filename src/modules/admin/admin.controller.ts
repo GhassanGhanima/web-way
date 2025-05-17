@@ -2,12 +2,14 @@ import { Controller, Get, Post, Body, Param, Query, UseGuards, Version } from '@
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiQuery } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
+import { PermissionsGuard } from '../auth/guards/permissions.guard';
 import { Roles, Role } from '@app/common/decorators/roles.decorator';
+import { Permissions, Permission } from '@app/common/decorators/permissions.decorator';
 import { AdminService } from './admin.service';
 
 @ApiTags('admin')
 @Controller('admin')
-@UseGuards(JwtAuthGuard, RolesGuard)
+@UseGuards(JwtAuthGuard, RolesGuard, PermissionsGuard)
 @Roles(Role.ADMIN)
 @ApiBearerAuth()
 export class AdminController {
@@ -15,6 +17,7 @@ export class AdminController {
 
   @Get('dashboard')
   @Version('1')
+  @Permissions(Permission.ANALYTICS_READ, Permission.USER_READ, Permission.SUBSCRIPTION_READ)
   @ApiOperation({ summary: 'Get admin dashboard data' })
   @ApiResponse({
     status: 200,
@@ -26,6 +29,7 @@ export class AdminController {
 
   @Get('/users/stats')
   @Version('1')
+  @Permissions(Permission.USER_READ)
   @ApiOperation({ summary: 'Get user statistics' })
   @ApiResponse({
     status: 200,
@@ -37,6 +41,7 @@ export class AdminController {
 
   @Get('subscriptions/stats')
   @Version('1')
+  @Permissions(Permission.SUBSCRIPTION_READ)
   @ApiOperation({ summary: 'Get subscription statistics' })
   @ApiResponse({
     status: 200,
@@ -48,6 +53,7 @@ export class AdminController {
 
   @Get('revenue')
   @Version('1')
+  @Permissions(Permission.SUBSCRIPTION_READ)
   @ApiOperation({ summary: 'Get revenue statistics' })
   @ApiQuery({
     name: 'startDate',
@@ -74,6 +80,7 @@ export class AdminController {
 
   @Post('system/config')
   @Version('1')
+  @Permissions(Permission.ROLE_UPDATE)
   @ApiOperation({ summary: 'Update system configuration' })
   @ApiResponse({
     status: 200,

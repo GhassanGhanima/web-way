@@ -2,6 +2,8 @@ import { Body, Controller, Headers, Post, RawBodyRequest, Req, UseGuards, Versio
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
 import { Request } from 'express';
 import { JwtAuthGuard } from '@app/modules/auth/guards/jwt-auth.guard';
+import { PermissionsGuard } from '@app/modules/auth/guards/permissions.guard';
+import { Permissions, Permission } from '@app/common/decorators/permissions.decorator';
 import { StripeService } from '../services/stripe.service';
 import { PaymentsService } from '../services/payments.service';
 
@@ -43,7 +45,8 @@ export class PaymentsController {
 
   @Post('create-payment-intent')
   @Version('1')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, PermissionsGuard)
+  @Permissions(Permission.SUBSCRIPTION_CREATE)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Create a payment intent for one-time payment' })
   @ApiResponse({

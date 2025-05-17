@@ -1,11 +1,13 @@
-import { Controller, Get, Post, Body, Param, Put, Delete, UseGuards, Version } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Post, Put, UseGuards, Version } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
 import { UsersService } from './users.service';
 import { User } from './entities/user.entity';
 import { CreateUserDto } from './dtos/create-user.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
+import { PermissionsGuard } from '../auth/guards/permissions.guard';
 import { Roles, Role } from '@app/common/decorators/roles.decorator';
+import { Permissions, Permission } from '@app/common/decorators/permissions.decorator';
 
 @ApiTags('users')
 @Controller('users')
@@ -14,8 +16,9 @@ export class UsersController {
 
   @Get()
   @Version('1')
-  @UseGuards(JwtAuthGuard, RolesGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard, PermissionsGuard)
   @Roles(Role.ADMIN)
+  @Permissions(Permission.USER_READ)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Get all users' })
   @ApiResponse({
@@ -29,7 +32,8 @@ export class UsersController {
 
   @Get(':id')
   @Version('1')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, PermissionsGuard)
+  @Permissions(Permission.USER_READ)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Get user by ID' })
   @ApiResponse({
@@ -47,6 +51,10 @@ export class UsersController {
 
   @Post()
   @Version('1')
+  @UseGuards(JwtAuthGuard, RolesGuard, PermissionsGuard)
+  @Roles(Role.ADMIN)
+  @Permissions(Permission.USER_CREATE)
+  @ApiBearerAuth()
   @ApiOperation({ summary: 'Create a new user' })
   @ApiResponse({
     status: 201,
@@ -59,7 +67,8 @@ export class UsersController {
 
   @Put(':id')
   @Version('1')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, PermissionsGuard)
+  @Permissions(Permission.USER_UPDATE)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Update a user' })
   @ApiResponse({
@@ -73,8 +82,9 @@ export class UsersController {
 
   @Delete(':id')
   @Version('1')
-  @UseGuards(JwtAuthGuard, RolesGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard, PermissionsGuard)
   @Roles(Role.ADMIN)
+  @Permissions(Permission.USER_DELETE)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Delete a user' })
   @ApiResponse({
@@ -83,5 +93,24 @@ export class UsersController {
   })
   remove(@Param('id') id: string): Promise<void> {
     return this.usersService.remove(id);
+  }
+
+  @Post(':id/roles')
+  @Version('1')
+  @UseGuards(JwtAuthGuard, RolesGuard, PermissionsGuard)
+  @Roles(Role.ADMIN)
+  @Permissions(Permission.USER_UPDATE, Permission.ROLE_ASSIGN)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Assign roles to a user' })
+  @ApiResponse({
+    status: 200,
+    description: 'Roles assigned successfully',
+    type: User,
+  })
+  assignRoles(
+    @Param('id') id: string,
+    @Body() data: { roleIds: string[] }
+  ): Promise<User> {
+    return this.usersService.assignRoles(id, data.roleIds);
   }
 }

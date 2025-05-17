@@ -2,18 +2,21 @@ import { Controller, Get, Post, Body, Query, UseGuards, Version } from '@nestjs/
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiQuery } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
+import { PermissionsGuard } from '../auth/guards/permissions.guard';
 import { Roles, Role } from '@app/common/decorators/roles.decorator';
+import { Permissions, Permission } from '@app/common/decorators/permissions.decorator';
 import { ReportsService } from './reports.service';
 
 @ApiTags('reports')
 @Controller('reports')
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, PermissionsGuard)
 @ApiBearerAuth()
 export class ReportsController {
   constructor(private readonly reportsService: ReportsService) {}
 
   @Get('usage')
   @Version('1')
+  @Permissions(Permission.ANALYTICS_READ)
   @ApiOperation({ summary: 'Get usage report' })
   @ApiQuery({
     name: 'integrationId',
@@ -47,6 +50,7 @@ export class ReportsController {
 
   @Get('subscription')
   @Version('1')
+  @Permissions(Permission.SUBSCRIPTION_READ)
   @ApiOperation({ summary: 'Get subscription report' })
   @ApiQuery({
     name: 'startDate',
@@ -73,6 +77,7 @@ export class ReportsController {
 
   @Post('export')
   @Version('1')
+  @Permissions(Permission.ANALYTICS_EXPORT)
   @ApiOperation({ summary: 'Export report data' })
   @ApiResponse({
     status: 200,
@@ -85,6 +90,7 @@ export class ReportsController {
   @Post('schedule')
   @Version('1')
   @Roles(Role.ADMIN)
+  @Permissions(Permission.ANALYTICS_EXPORT)
   @UseGuards(RolesGuard)
   @ApiOperation({ summary: 'Schedule a report' })
   @ApiResponse({

@@ -5,7 +5,9 @@ import { Subscription } from './entities/subscription.entity';
 import { CreateSubscriptionDto } from './dtos/create-subscription.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
+import { PermissionsGuard } from '../auth/guards/permissions.guard';
 import { Roles, Role } from '@app/common/decorators/roles.decorator';
+import { Permissions, Permission } from '@app/common/decorators/permissions.decorator';
 
 @ApiTags('subscriptions')
 @Controller('subscriptions')
@@ -14,8 +16,9 @@ export class SubscriptionsController {
 
   @Get()
   @Version('1')
-  @UseGuards(JwtAuthGuard, RolesGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard, PermissionsGuard)
   @Roles(Role.ADMIN)
+  @Permissions(Permission.SUBSCRIPTION_READ)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Get all subscriptions' })
   @ApiQuery({
@@ -35,7 +38,8 @@ export class SubscriptionsController {
 
   @Get(':id')
   @Version('1')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, PermissionsGuard)
+  @Permissions(Permission.SUBSCRIPTION_READ)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Get subscription by ID' })
   @ApiResponse({
@@ -53,7 +57,8 @@ export class SubscriptionsController {
 
   @Post()
   @Version('1')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, PermissionsGuard)
+  @Permissions(Permission.SUBSCRIPTION_CREATE)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Create a new subscription' })
   @ApiResponse({
@@ -65,9 +70,10 @@ export class SubscriptionsController {
     return this.subscriptionsService.create(createSubscriptionDto);
   }
 
-  @Put(':id/cancel')
+  @Post(':id/cancel')
   @Version('1')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, PermissionsGuard)
+  @Permissions(Permission.SUBSCRIPTION_UPDATE)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Cancel a subscription' })
   @ApiResponse({
@@ -81,8 +87,9 @@ export class SubscriptionsController {
 
   @Delete(':id')
   @Version('1')
-  @UseGuards(JwtAuthGuard, RolesGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard, PermissionsGuard)
   @Roles(Role.ADMIN)
+  @Permissions(Permission.SUBSCRIPTION_DELETE)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Delete a subscription' })
   @ApiResponse({

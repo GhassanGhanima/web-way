@@ -168,6 +168,13 @@ export class CdnService {
     return loaderScript;
   }
 
+  /**
+   * Alias for generateScriptLoader for compatibility
+   */
+  async generateLoader(apiKey: string, origin: string): Promise<string> {
+    return this.generateScriptLoader(apiKey, origin);
+  }
+
   private async checkPlanAccess(userId: string, requiredPlan: string): Promise<boolean> {
     // Implementation would check if the user's subscription includes this plan level
     const subscriptions = await this.subscriptionsService.findAll(userId);

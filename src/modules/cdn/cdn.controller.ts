@@ -6,7 +6,9 @@ import { ScriptAsset, ScriptType } from './entities/script-asset.entity';
 import { CreateScriptAssetDto } from './dtos/create-script-asset.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
+import { PermissionsGuard } from '../auth/guards/permissions.guard';
 import { Roles, Role } from '@app/common/decorators/roles.decorator';
+import { Permissions, Permission } from '@app/common/decorators/permissions.decorator';
 import { CdnSecurityGuard } from './guards/cdn-security.guard';
 
 @ApiTags('cdn')
@@ -16,8 +18,9 @@ export class CdnController {
 
   @Get('scripts')
   @Version('1')
-  @UseGuards(JwtAuthGuard, RolesGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard, PermissionsGuard)
   @Roles(Role.ADMIN)
+  @Permissions(Permission.INTEGRATION_READ)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'List all script assets' })
   @ApiQuery({
@@ -41,13 +44,14 @@ export class CdnController {
     @Query('type') type?: ScriptType,
     @Query('activeOnly') activeOnly = true,
   ): Promise<ScriptAsset[]> {
-    return this.cdnService.findAllScripts(type, String(activeOnly) === 'true');
+    return this.cdnService.findAllScripts(type, activeOnly);
   }
 
   @Post('scripts')
   @Version('1')
-  @UseGuards(JwtAuthGuard, RolesGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard, PermissionsGuard)
   @Roles(Role.ADMIN)
+  @Permissions(Permission.INTEGRATION_CREATE)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Create a new script asset' })
   @ApiResponse({
@@ -59,17 +63,45 @@ export class CdnController {
     return this.cdnService.createScript(createScriptDto);
   }
 
-  @Get('script/load/:id')
+  @Get('loader.js')
   @Version('1')
   @UseGuards(CdnSecurityGuard)
-  @ApiOperation({ summary: 'Load a script by ID' })
+  @ApiOperation({ summary: 'Get script loader' })
+  @ApiQuery({
+    name: 'apiKey',
+    required: true,
+    type: String,
+    description: 'Integration API key',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Returns the script loader JavaScript',
+  })
+  async getLoader(
+    @Query('apiKey') apiKey: string,
+    @Headers('origin') origin: string,
+    @Res() res: Response,
+  ): Promise<void> {
+    const script = await this.cdnService.generateLoader(apiKey, origin);
+    
+    res.setHeader('Content-Type', 'application/javascript');
+    res.setHeader('Cache-Control', 'public, max-age=3600');
+    res.status(HttpStatus.OK).send(script);
+  }
+
+  @Get('scripts/:id')
+  @Version('1')
+  @UseGuards(CdnSecurityGuard)
+  @ApiOperation({ summary: 'Get script content' })
   @ApiParam({
     name: 'id',
+    required: true,
     description: 'Script asset ID',
   })
   @ApiQuery({
     name: 'apiKey',
     required: true,
+    type: String,
     description: 'Integration API key',
   })
   @ApiResponse({
@@ -83,8 +115,7 @@ export class CdnController {
   ): Promise<void> {
     const { content, contentType, integrity } = await this.cdnService.getScriptContent(id, apiKey);
     
-    // Set proper cache headers
-    res.setHeader('Cache-Control', 'public, max-age=3600'); // Cache for 1 hour
+    res.setHeader('Cache-Control', 'public, max-age=3600');
     res.setHeader('Content-Type', contentType);
     res.setHeader('X-Content-Type-Options', 'nosniff');
     res.setHeader('Content-Security-Policy', "default-src 'self'");
@@ -92,40 +123,5 @@ export class CdnController {
     res.setHeader('Integrity', integrity);
     
     res.status(HttpStatus.OK).send(content);
-  }
-
-  @Get('loader.js')
-  @Version('1')
-  @ApiOperation({ summary: 'Get the script loader for a domain' })
-  @ApiQuery({
-    name: 'apiKey',
-    required: true,
-    description: 'Integration API key',
-  })
-  @ApiHeader({
-    name: 'Origin',
-    required: true,
-    description: 'Domain origin requesting the loader',
-  })
-  @ApiResponse({
-    status: 200,
-    description: 'Returns the loader script',
-  })
-  async getLoader(
-    @Query('apiKey') apiKey: string,
-    @Headers('origin') origin: string,
-    @Res() res: Response,
-  ): Promise<void> {
-    // Extract domain from origin
-    const domain = origin.replace(/^https?:\/\//, '').split(':')[0];
-    
-    const loaderScript = await this.cdnService.generateScriptLoader(apiKey, domain);
-    
-    // Set proper headers
-    res.setHeader('Content-Type', 'application/javascript');
-    res.setHeader('Cache-Control', 'public, max-age=3600'); // Cache for 1 hour
-    res.setHeader('X-Content-Type-Options', 'nosniff');
-    
-    res.status(HttpStatus.OK).send(loaderScript);
   }
 }

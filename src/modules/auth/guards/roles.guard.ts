@@ -1,13 +1,20 @@
 import { Injectable, CanActivate, ExecutionContext } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
-import { Role, ROLES_KEY } from '@app/common/decorators/roles.decorator';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { Role as RoleEnum, ROLES_KEY } from '@app/common/decorators/roles.decorator';
+import { Role } from '../entities/role.entity';
 
 @Injectable()
 export class RolesGuard implements CanActivate {
-  constructor(private reflector: Reflector) {}
+  constructor(
+    private reflector: Reflector,
+    @InjectRepository(Role)
+    private rolesRepository: Repository<Role>,
+  ) {}
 
-  canActivate(context: ExecutionContext): boolean {
-    const requiredRoles = this.reflector.getAllAndOverride<Role[]>(ROLES_KEY, [
+  async canActivate(context: ExecutionContext): Promise<boolean> {
+    const requiredRoles = this.reflector.getAllAndOverride<RoleEnum[]>(ROLES_KEY, [
       context.getHandler(),
       context.getClass(),
     ]);
@@ -17,6 +24,20 @@ export class RolesGuard implements CanActivate {
     }
     
     const { user } = context.switchToHttp().getRequest();
-    return requiredRoles.some((role) => user?.roles?.includes(role));
+    if (!user || !user.id) {
+      return false;
+    }
+
+    // Get user's roles from the database
+    const userRoles = await this.rolesRepository
+      .createQueryBuilder('role')
+      .innerJoin('role.users', 'user', 'user.id = :userId', { userId: user.id })
+      .getMany();
+
+    // Extract role names
+    const roleNames = userRoles.map(role => role.name);
+    
+    // Check if user has any of the required roles
+    return requiredRoles.some(role => roleNames.includes(role));
   }
 }

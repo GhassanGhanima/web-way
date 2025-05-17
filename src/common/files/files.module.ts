@@ -4,9 +4,13 @@ import { FilesController } from './files.controller';
 import { FilesService } from './files.service';
 
 @Module({
-  imports: [ConfigModule],
+  imports: [
+    ConfigModule,
+  ],
   controllers: [FilesController],
-  providers: [FilesService],
+  providers: [
+    FilesService,
+  ],
   exports: [FilesService],
 })
 export class FilesModule {}
