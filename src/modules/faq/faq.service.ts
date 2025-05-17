@@ -108,6 +108,30 @@ export class FaqService {
     return updatedFaqs;
   }
 
+  /**
+ * Find FAQs by product type
+ */
+async findFaqsByProductType(productType: string): Promise<Faq[]> {
+  return this.faqRepository.createQueryBuilder('faq')
+    .leftJoinAndSelect('faq.product', 'product')
+    .where('product.type = :productType', { productType })
+    .andWhere('faq.isPublished = :isPublished', { isPublished: true })
+    .orderBy('faq.order', 'ASC')
+    .getMany();
+}
+
+/**
+ * Create a FAQ associated with a product
+ */
+async createProductFaq(productId: string, createFaqDto: CreateFaqDto): Promise<Faq> {
+  const faq = this.faqRepository.create({
+    ...createFaqDto,
+    productId,
+  });
+  
+  return this.faqRepository.save(faq);
+}
+
   // Category Methods
   async findAllCategories(): Promise<Category[]> {
     return this.categoryRepository.find({

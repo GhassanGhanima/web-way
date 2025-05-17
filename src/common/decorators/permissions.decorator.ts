@@ -41,6 +41,11 @@ export enum Permission {
   FAQ_CREATE = 'faq:create',
   FAQ_UPDATE = 'faq:update',
   FAQ_DELETE = 'faq:delete',
+   ACCESSIBILITY_WIDGET_MANAGE = 'accessibility_widget:manage',
+  ACCESSIBILITY_MONITOR_MANAGE = 'accessibility_monitor:manage',
+  ACCESSIBILITY_AUDIT_MANAGE = 'accessibility_audit:manage',
+  VPAT_MANAGE = 'vpat:manage',
+  LITIGATION_SUPPORT_MANAGE = 'litigation_support:manage',
 }
 
 export const Permissions = (...permissions: Permission[]) => SetMetadata(PERMISSIONS_KEY, permissions);

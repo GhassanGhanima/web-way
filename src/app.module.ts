@@ -25,7 +25,8 @@ import { CacheModule } from './common/cache/cache.module';
 import { GlobalExceptionFilter } from './common/filters/global-exception.filter';
 import { LoggingInterceptor } from './common/logging/logging.interceptor';
 import { ConfigModule as AppConfigModule } from './config/config.module';
-import {FaqModule} from './modules/faq/faq.module';
+import { FaqModule } from './modules/faq/faq.module';
+import { ProductsModule } from './modules/products/products.module';
 
 @Module({
   imports: [
@@ -63,7 +64,8 @@ import {FaqModule} from './modules/faq/faq.module';
     EmailModule,
     TasksModule,
     CacheModule,
-    FaqModule
+    FaqModule,
+    ProductsModule,
   ],
   controllers: [AppController],
   providers: [

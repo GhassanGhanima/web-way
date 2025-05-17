@@ -140,4 +140,35 @@ export class FaqController {
   ): Promise<Faq[]> {
     return this.faqService.reorderFaqs(data.categoryId, data.faqIds);
   }
+
+  @Get('product/:productType')
+  @Version('1')
+  @ApiOperation({ summary: 'Get FAQs by product type' })
+  @ApiResponse({
+    status: 200,
+    description: 'Returns FAQs for a specific product type',
+    type: [Faq],
+  })
+  getFaqsByProductType(@Param('productType') productType: string): Promise<Faq[]> {
+    return this.faqService.findFaqsByProductType(productType);
+  }
+
+  @Post('product/:productId')
+  @Version('1')
+  @UseGuards(JwtAuthGuard, RolesGuard, PermissionsGuard)
+  @Roles(Role.ADMIN)
+  @Permissions(Permission.FAQ_CREATE)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Create a FAQ for a specific product' })
+  @ApiResponse({
+    status: 201,
+    description: 'The FAQ has been successfully created for the product',
+    type: Faq,
+  })
+  createProductFaq(
+    @Param('productId') productId: string,
+    @Body() createFaqDto: CreateFaqDto
+  ): Promise<Faq> {
+    return this.faqService.createProductFaq(productId, createFaqDto);
+  }
 }

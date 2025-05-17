@@ -1,46 +1,58 @@
-import { Column, Entity, ManyToOne, JoinColumn } from 'typeorm';
+import { Entity, Column, ManyToOne, JoinColumn } from 'typeorm';
 import { ApiProperty } from '@nestjs/swagger';
 import { BaseEntity } from '@app/common/entities/base.entity';
 import { Category } from './category.entity';
+import { Product } from '@app/modules/products/entities/product.entity';
 
 @Entity('faqs')
 export class Faq extends BaseEntity {
   @ApiProperty({
-    description: 'The question being asked',
-    example: 'How do I reset my password?',
+    description: 'FAQ question',
+    example: 'How do I install the accessibility widget?',
   })
   @Column()
   question: string;
 
   @ApiProperty({
-    description: 'The answer to the question',
-    example: 'You can reset your password by clicking on the "Forgot Password" link on the login page.',
+    description: 'FAQ answer',
+    example: 'You can install our accessibility widget by adding a single line of JavaScript to your website...',
   })
-  @Column('text')
+  @Column({ type: 'text' })
   answer: string;
 
   @ApiProperty({
-    description: 'The order in which this FAQ appears',
+    description: 'Order of the FAQ in the category',
     example: 1,
   })
   @Column({ default: 0 })
   order: number;
 
   @ApiProperty({
-    description: 'Whether this FAQ is published',
+    description: 'Whether the FAQ is published',
     example: true,
   })
   @Column({ default: true })
   isPublished: boolean;
 
   @ApiProperty({
-    description: 'The category this FAQ belongs to',
-    type: () => Category,
+    description: 'Category ID',
+    example: '123e4567-e89b-12d3-a456-426614174000',
   })
-  @ManyToOne(() => Category, category => category.faqs)
+  @Column({ nullable: true })
+  categoryId: string;
+
+  @ManyToOne(() => Category, category => category.faqs, { onDelete: 'SET NULL' })
   @JoinColumn({ name: 'categoryId' })
   category: Category;
 
+  @ApiProperty({
+    description: 'Product ID',
+    example: '123e4567-e89b-12d3-a456-426614174000',
+  })
   @Column({ nullable: true })
-  categoryId: string;
+  productId: string;
+
+  @ManyToOne(() => Product, product => product.faqs, { onDelete: 'SET NULL' })
+  @JoinColumn({ name: 'productId' })
+  product: Product;
 }
