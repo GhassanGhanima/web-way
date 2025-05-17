@@ -4,8 +4,8 @@ import { UsersService } from './users.service';
 import { User } from './entities/user.entity';
 import { CreateUserDto } from './dtos/create-user.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
-import { RolesGuard } from '../auth/guards/roles.guard';
-import { PermissionsGuard } from '../auth/guards/permissions.guard';
+import { RolesGuard } from '../roles/guards/roles.guard';
+import { PermissionsGuard } from '../permissions/guards/permissions.guard';
 import { Roles, Role } from '@app/common/decorators/roles.decorator';
 import { Permissions, Permission } from '@app/common/decorators/permissions.decorator';
 

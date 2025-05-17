@@ -4,8 +4,8 @@ import { SubscriptionsService } from './subscriptions.service';
 import { Subscription } from './entities/subscription.entity';
 import { CreateSubscriptionDto } from './dtos/create-subscription.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
-import { RolesGuard } from '../auth/guards/roles.guard';
-import { PermissionsGuard } from '../auth/guards/permissions.guard';
+import { RolesGuard } from '../roles/guards/roles.guard';
+import { PermissionsGuard } from '../permissions/guards/permissions.guard';
 import { Roles, Role } from '@app/common/decorators/roles.decorator';
 import { Permissions, Permission } from '@app/common/decorators/permissions.decorator';
 

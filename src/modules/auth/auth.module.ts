@@ -9,8 +9,6 @@ import { LocalStrategy } from './strategies/local.strategy';
 import { UsersModule } from '../users/users.module';
 import { RolesModule } from '../roles/roles.module';
 import { PermissionsModule } from '../permissions/permissions.module';
-import { RolesGuard } from './guards/roles.guard';
-import { PermissionsGuard } from './guards/permissions.guard';
 
 @Module({
   imports: [
@@ -31,9 +29,7 @@ import { PermissionsGuard } from './guards/permissions.guard';
     AuthService, 
     LocalStrategy, 
     JwtStrategy, 
-    RolesGuard, 
-    PermissionsGuard
   ],
-  exports: [AuthService, JwtStrategy, RolesGuard, PermissionsGuard],
+  exports: [AuthService, JwtStrategy],
 })
 export class AuthModule {}

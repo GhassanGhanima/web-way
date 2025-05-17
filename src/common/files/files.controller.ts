@@ -18,7 +18,7 @@ import {
   import { FileInterceptor } from '@nestjs/platform-express';
   import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiConsumes, ApiBody } from '@nestjs/swagger';
   import { JwtAuthGuard } from '@app/modules/auth/guards/jwt-auth.guard';
-  import { RolesGuard } from '@app/modules/auth/guards/roles.guard';
+  import { RolesGuard } from '@app/modules/roles/guards/roles.guard';
   import { Roles, Role } from '@app/common/decorators/roles.decorator';
   import { FilesService } from './files.service';
   import { Response } from 'express';

@@ -1,8 +1,8 @@
 import { Body, Controller, Delete, Get, Param, Post, Put, UseGuards, Version } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
 import { JwtAuthGuard } from '@app/modules/auth/guards/jwt-auth.guard';
-import { RolesGuard } from '@app/modules/auth/guards/roles.guard';
-import { PermissionsGuard } from '@app/modules/auth/guards/permissions.guard';
+import { RolesGuard } from '@app/modules/roles/guards/roles.guard';
+import { PermissionsGuard } from '@app/modules/permissions/guards/permissions.guard';
 import { Roles, Role } from '@app/common/decorators/roles.decorator';
 import { Permissions, Permission as PermissionEnum } from '@app/common/decorators/permissions.decorator';
 import { PermissionsService } from '../permissions.service';

@@ -5,6 +5,7 @@ import { RolesService } from './roles.service';
 import { RolesController } from './controllers/roles.controller';
 import { PermissionsModule } from '../permissions/permissions.module';
 import { Permission } from '../permissions/entities/permission.entity';
+import { RolesGuard } from './guards/roles.guard';
 
 @Module({
   imports: [
@@ -12,7 +13,7 @@ import { Permission } from '../permissions/entities/permission.entity';
     forwardRef(() => PermissionsModule),
   ],
   controllers: [RolesController],
-  providers: [RolesService],
-  exports: [RolesService],
+  providers: [RolesService,RolesGuard],
+  exports: [RolesService,RolesGuard],
 })
 export class RolesModule {}
