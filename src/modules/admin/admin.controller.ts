@@ -1,19 +1,26 @@
-import { Controller, Get, Post, Body, Param, Query, UseGuards, Version } from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, Query, UseGuards, Version, Req } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiQuery } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../roles/guards/roles.guard';
 import { PermissionsGuard } from '../permissions/guards/permissions.guard';
 import { Roles, Role } from '@app/common/decorators/roles.decorator';
 import { Permissions, Permission } from '@app/common/decorators/permissions.decorator';
-import { AdminService } from './admin.service'; 
+import { AdminService } from './admin.service';
+import { CreateUserDto } from '../users/dtos/create-user.dto'; 
+import { UsersService } from '../users/users.service';
+import { User } from '../users/entities/user.entity';
+import { Request } from 'express';
 
 @ApiTags('admin')
 @Controller('admin')
 @UseGuards(JwtAuthGuard, RolesGuard, PermissionsGuard)
-@Roles(Role.ADMIN)
+@Roles(Role.ADMIN, Role.SUPER_ADMIN)
 @ApiBearerAuth()
 export class AdminController {
-  constructor(private readonly adminService: AdminService) {}
+  constructor(
+    private readonly adminService: AdminService,
+    private readonly usersService: UsersService
+  ) {}
 
   @Get('dashboard')
   @Version('1')
@@ -88,5 +95,46 @@ export class AdminController {
   })
   updateSystemConfig(@Body() config: Record<string, any>): Promise<any> {
     return this.adminService.updateSystemConfig(config);
+  }
+
+  @Post('users')
+  @Version('1')
+  @Permissions(Permission.USER_CREATE)
+  @ApiOperation({ summary: 'Create a user as an admin' })
+  @ApiResponse({
+    status: 201,
+    description: 'User created successfully',
+    type: User,
+  })
+  async createUser(@Body() createUserDto: CreateUserDto, @Req() req: Request): Promise<User> {
+    const admin = req.user as any;
+    
+    // Create a new user with the current admin as parent
+    const user = await this.usersService.create({
+      ...createUserDto,
+      parentAdminId: admin.id,
+    });
+    
+    return user;
+  }
+
+  @Get('users')
+  @Version('1')
+  @Permissions(Permission.USER_READ)
+  @ApiOperation({ summary: 'Get users created by this admin' })
+  @ApiResponse({
+    status: 200,
+    description: 'Returns users',
+    type: [User],
+  })
+  async getUsers(@Req() req: Request): Promise<User[]> {
+    const admin = req.user as any;
+    
+    // Super admin can see all users, regular admin can only see their created users
+    if (admin.roles.includes(Role.SUPER_ADMIN)) {
+      return this.usersService.findAll();
+    } else {
+      return this.usersService.findByParentAdmin(admin.id);
+    }
   }
 }

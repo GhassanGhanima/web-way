@@ -265,3 +265,63 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 ## Support
 
 For support, contact our team at support@example.com or open an issue on GitHub.
+
+# Web-Way Accessibility Application
+
+## Database Setup
+
+This project uses TypeORM for database migrations. There are two ways to run migrations:
+
+### Method 1: Custom Migration Runner (Recommended)
+
+This method runs migrations in a specific order to ensure tables are created before data is inserted:
+
+```bash
+npm run migration:custom
+```
+
+### Method 2: Standard TypeORM Migration Runner
+
+Only use this if you're familiar with TypeORM's migration system:
+
+```bash
+npm run migration:typeorm
+```
+
+### Setting up a fresh database
+
+To drop the database, recreate it, and run all migrations and seeds:
+
+```bash
+npm run db:fresh
+```
+
+### Seeding data
+
+To seed the database with initial data:
+
+```bash
+npm run seed
+```
+
+## Development
+
+To start the development server:
+
+```bash
+npm run start:dev
+```
+
+## Common issues
+
+### "relation does not exist" errors
+
+If you encounter "relation does not exist" errors, it means migrations are running in the wrong order. Use the custom migration runner instead:
+
+```bash
+npm run migration:custom
+```
+
+## License
+
+This project is licensed under the [LICENSE NAME] - see the LICENSE file for details.

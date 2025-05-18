@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, Param, Post, Put, UseGuards, Version, Req, UseInterceptors, ClassSerializerInterceptor } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Post, Put, UseGuards, Version, Req, UseInterceptors, ClassSerializerInterceptor, UnauthorizedException } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
 import { UsersService } from './users.service';
 import { User } from './entities/user.entity';
@@ -127,7 +127,18 @@ export class UsersController {
     type: User,
   })
   getUserDetails(@Req() request: Request): Promise<User> {
+    console.log('User from request:', request.user);
+    
+    if (!request.user) {
+      throw new UnauthorizedException('User not found in request');
+    }
+    
     const userId = (request.user as any).id;
+    
+    if (!userId) {
+      throw new UnauthorizedException('User ID not found in token');
+    }
+    
     return this.usersService.findOne(userId);
   }
 

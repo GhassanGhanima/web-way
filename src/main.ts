@@ -15,6 +15,36 @@ async function bootstrap() {
     defaultVersion: configService.get('app.defaultVersion'),
   });
   
+  // Improved JWT debugging middleware
+  app.use((req, res, next) => {
+    const authHeader = req.headers.authorization;
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+      const token = authHeader.substring(7);
+      console.log('JWT token found in request:', token.substring(0, 20) + '...');
+      
+      try {
+        // Log token info without verification - just for debugging
+        const tokenParts = token.split('.');
+        if (tokenParts.length === 3) {
+          const payload = JSON.parse(Buffer.from(tokenParts[1], 'base64').toString());
+          console.log('Token payload:', {
+            sub: payload.sub,
+            email: payload.email,
+            exp: payload.exp ? new Date(payload.exp * 1000).toISOString() : 'undefined',
+          });
+          
+          // Check if token is expired
+          if (payload.exp && payload.exp < Math.floor(Date.now() / 1000)) {
+            console.log('⚠️ WARNING: Token appears to be expired');
+          }
+        }
+      } catch (e) {
+        console.log('Could not decode token for debugging:', e.message);
+      }
+    }
+    next();
+  });
+
   // Enable validation
   app.useGlobalPipes(new ValidationPipe({
     transform: true,
@@ -61,16 +91,6 @@ async function bootstrap() {
         bearerFormat: 'JWT',
         description: 'Enter JWT token',
       })
-      .addOAuth2({
-        type: 'oauth2',
-        flows: {
-          implicit: {
-            authorizationUrl: `${configService.get('app.url', 'http://localhost:3000')}/api/v1/auth/google`,
-            scopes: {},
-          },
-        },
-      })
-      .addSecurityRequirements('bearer')
       .build();
     
     const document = SwaggerModule.createDocument(app, config);
@@ -78,11 +98,6 @@ async function bootstrap() {
     SwaggerModule.setup(configService.get('swagger.path') || '/api-docs', app, document, {
       swaggerOptions: {
         persistAuthorization: true,
-        docExpansion: 'none',
-        filter: true,
-        showExtensions: true,
-        tagsSorter: 'alpha',
-        operationsSorter: 'alpha',
       },
     });
   }

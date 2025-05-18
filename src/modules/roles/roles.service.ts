@@ -2,7 +2,9 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Role } from './entities/role.entity';
-import { Permission } from '@app/modules/permissions/entities/permission.entity';
+import { Permission } from '../permissions/entities/permission.entity';
+import { CreateRoleDto } from './dtos/create-role.dto';
+import { UpdateRoleDto } from './dtos/update-role.dto';
 
 @Injectable()
 export class RolesService {
@@ -14,13 +16,15 @@ export class RolesService {
   ) {}
 
   async findAll(): Promise<Role[]> {
-    return this.rolesRepository.find({ relations: ['permissions'] });
+    return this.rolesRepository.find({
+      relations: ['permissions'],
+    });
   }
 
   async findOne(id: string): Promise<Role> {
-    const role = await this.rolesRepository.findOne({ 
+    const role = await this.rolesRepository.findOne({
       where: { id },
-      relations: ['permissions'] 
+      relations: ['permissions'],
     });
     
     if (!role) {
@@ -30,26 +34,21 @@ export class RolesService {
     return role;
   }
 
-  async create(roleData: Partial<Role>): Promise<Role> {
-    const role = this.rolesRepository.create(roleData);
+  async findByName(name: string): Promise<Role | null> {
+    return this.rolesRepository.findOne({
+      where: { name },
+      relations: ['permissions'],
+    });
+  }
+
+  async create(createRoleDto: CreateRoleDto): Promise<Role> {
+    const role = this.rolesRepository.create(createRoleDto);
     return this.rolesRepository.save(role);
   }
 
-  async update(id: string, roleData: Partial<Role>): Promise<Role> {
-    const role = await this.findOne(id);
-    
-    // Update basic properties
-    Object.assign(role, roleData);
-    
-    return this.rolesRepository.save(role);
-  }
-
-  async assignPermissions(roleId: string, permissionIds: string[]): Promise<Role> {
-    const role = await this.findOne(roleId);
-    const permissions = await this.permissionsRepository.findByIds(permissionIds);
-    
-    role.permissions = permissions;
-    return this.rolesRepository.save(role);
+  async update(id: string, updateRoleDto: UpdateRoleDto): Promise<Role> {
+    await this.rolesRepository.update(id, updateRoleDto);
+    return this.findOne(id);
   }
 
   async remove(id: string): Promise<void> {
@@ -57,8 +56,18 @@ export class RolesService {
     await this.rolesRepository.remove(role);
   }
 
+  async assignPermissions(id: string, permissionIds: string[]): Promise<Role> {
+    const role = await this.findOne(id);
+    const permissions = await this.permissionsRepository.findByIds(permissionIds);
+    
+    role.permissions = permissions;
+    return this.rolesRepository.save(role);
+  }
+
   /**
-   * Find all roles assigned to a user with their permissions
+   * Find all roles with their permissions for a specific user
+   * @param userId User ID to find roles for
+   * @returns Array of role entities with permissions
    */
   async findUserRoles(userId: string): Promise<Role[]> {
     return this.rolesRepository

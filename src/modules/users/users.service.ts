@@ -3,7 +3,8 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, In } from 'typeorm';
 import { User } from './entities/user.entity';
 import { CreateUserDto } from './dtos/create-user.dto';
-import { Role } from './../roles/entities/role.entity';
+import { Role } from '../roles/entities/role.entity';
+import * as bcrypt from 'bcrypt';
 
 @Injectable()
 export class UsersService {
@@ -34,13 +35,13 @@ export class UsersService {
   }
 
   async findOneWithFullDetails(id: string): Promise<User> {
-    const user = await this.usersRepository.findOne({
+    const user = await this.usersRepository.findOne({ 
       where: { id },
       relations: [
         'roles', 
-        'roles.permissions',
-        // Add any other relations you want to include for full details
-        // For example: 'subscriptions', 'integrations', etc.
+        'roles.permissions', 
+        'integrations', 
+        'childUsers'
       ]
     });
     
@@ -58,6 +59,14 @@ export class UsersService {
     });
   }
 
+  async findUsersByRole(roleName: string): Promise<User[]> {
+    return this.usersRepository.createQueryBuilder('user')
+      .innerJoinAndSelect('user.roles', 'role', 'role.name = :roleName', { roleName })
+      .leftJoinAndSelect('user.roles', 'allRoles')
+      .leftJoinAndSelect('allRoles.permissions', 'permissions')
+      .getMany();
+  }
+
   async create(createUserDto: CreateUserDto): Promise<User> {
     // Check if email already exists
     const existingUser = await this.findByEmail(createUserDto.email);
@@ -68,17 +77,22 @@ export class UsersService {
     // Create a new user
     const user = this.usersRepository.create(createUserDto);
     
-    // Assign default USER role
-    const defaultRole = await this.rolesRepository.findOne({ 
-      where: { name: 'user' } 
-    });
-    
-    if (defaultRole) {
-      user.roles = [defaultRole];
-    } else {
-      console.warn('Default user role not found! User will have no roles.');
-      user.roles = [];
+    // Assign default USER role if no role is specified
+    if (!user.roles || user.roles.length === 0) {
+      const defaultRole = await this.rolesRepository.findOne({ 
+        where: { name: 'user' } 
+      });
+      
+      if (defaultRole) {
+        user.roles = [defaultRole];
+      } else {
+        console.warn('Default user role not found! User will have no roles.');
+        user.roles = [];
+      }
     }
+
+    // Hash the password before saving
+    await user.hashPassword();
 
     // Save user with role assignment
     return this.usersRepository.save(user);
@@ -98,6 +112,13 @@ export class UsersService {
     return this.usersRepository.save(user);
   }
 
+  async updatePassword(id: string, password: string): Promise<void> {
+    const user = await this.findOne(id);
+    user.password = password;
+    await user.hashPassword();
+    await this.usersRepository.save(user);
+  }
+
   async remove(id: string): Promise<void> {
     const user = await this.findOne(id);
     await this.usersRepository.remove(user);
@@ -112,23 +133,23 @@ export class UsersService {
   }
 
   /**
- * Update user's last login timestamp
- */
-async updateLastLogin(userId: string): Promise<void> {
-  await this.usersRepository.update(userId, {
-    lastLoginAt: new Date(),
-  });
-}
+   * Update user's last login timestamp
+   */
+  async updateLastLogin(userId: string): Promise<void> {
+    await this.usersRepository.update(userId, {
+      lastLoginAt: new Date(),
+    });
+  }
 
-/**
- * Find all users created by a specific admin user
- * @param parentAdminId ID of the parent admin user
- * @returns Array of user entities
- */
-async findByParentAdmin(parentAdminId: string): Promise<User[]> {
-  return this.usersRepository.find({
-    where: { parentAdminId },
-    relations: ['roles', 'roles.permissions'],
-  });
-}
+  /**
+   * Find all users created by a specific admin user
+   * @param parentAdminId ID of the parent admin user
+   * @returns Array of user entities
+   */
+  async findByParentAdmin(parentAdminId: string): Promise<User[]> {
+    return this.usersRepository.find({
+      where: { parentAdminId },
+      relations: ['roles', 'roles.permissions'],
+    });
+  }
 }

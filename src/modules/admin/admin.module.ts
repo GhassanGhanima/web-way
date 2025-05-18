@@ -8,6 +8,7 @@ import { AdminController } from './admin.controller';
 import { AdminService } from './admin.service';
 import { RolesModule } from '../roles/roles.module';
 import { PermissionsModule } from '../permissions/permissions.module';
+
 @Module({
   imports: [
     UsersModule,
@@ -15,8 +16,8 @@ import { PermissionsModule } from '../permissions/permissions.module';
     SubscriptionsModule,
     IntegrationsModule,
     AnalyticsModule,
-       RolesModule,        // Import RolesModule to make RolesService available
-        PermissionsModule,  // Import PermissionsModule for PermissionsGuard
+    RolesModule,
+    PermissionsModule,
   ],
   controllers: [AdminController],
   providers: [AdminService],

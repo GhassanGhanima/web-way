@@ -1,15 +1,15 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { Injectable, UnauthorizedException, BadRequestException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { UsersService } from '../users/users.service';
+import { RolesService } from '../roles/roles.service';
 import { LoginDto } from './dtos/login.dto';
 import { CreateUserDto } from '../users/dtos/create-user.dto';
 
-// Move the interface outside the class
 export interface GoogleUserDto {
   email: string;
-  firstName?: string;
-  lastName?: string;
+  firstName: string;
+  lastName: string;
   avatarUrl?: string;
   googleId: string;
 }
@@ -20,6 +20,7 @@ export class AuthService {
     private usersService: UsersService,
     private jwtService: JwtService,
     private configService: ConfigService,
+    private rolesService: RolesService,
   ) {}
 
   async validateUser(email: string, password: string): Promise<any> {
@@ -42,37 +43,83 @@ export class AuthService {
     return this.generateTokens(user);
   }
 
+  /**
+   * Register a new user
+   * For public registration, users are assigned the basic USER role
+   */
   async register(createUserDto: CreateUserDto) {
+    // Create user with default USER role
     const user = await this.usersService.create(createUserDto);
     return this.generateTokens(user);
   }
 
+  /**
+   * Register an admin user
+   * This should only be called by a super admin
+   */
+  async registerAdmin(createUserDto: CreateUserDto) {
+    // Get admin role
+    const adminRole = await this.rolesService.findByName('admin');
+    
+    if (!adminRole) {
+      throw new BadRequestException('Admin role not found');
+    }
+
+    // Create user with custom role assignment
+    const user = await this.usersService.create(createUserDto);
+    await this.usersService.assignRoles(user.id, [adminRole.id]);
+    
+    return this.generateTokens(user);
+  }
+
+  /**
+   * Register a user by an admin
+   * Admin-created users get USER role by default
+   * @param createUserDto User data
+   * @param adminId ID of the admin creating the user
+   */
+  async registerUserByAdmin(createUserDto: CreateUserDto, adminId: string) {
+    // Set the parentAdminId to track which admin created this user
+    const enrichedUserDto = {
+      ...createUserDto,
+      parentAdminId: adminId
+    };
+    
+    const user = await this.usersService.create(enrichedUserDto);
+    return user;
+  }
+
   async refreshToken(refreshToken: string) {
     try {
+      // Verify the refresh token
       const payload = this.jwtService.verify(refreshToken, {
-        secret: this.configService.get<string>('jwt.secret'),
+        secret: this.configService.get<string>('JWT_SECRET') || 'your-secret-key',
       });
 
+      // Get the user
       const user = await this.usersService.findOne(payload.sub);
+      
+      // Generate new tokens
       return this.generateTokens(user);
     } catch (error) {
+      console.error('Refresh token error:', error);
       throw new UnauthorizedException('Invalid refresh token');
     }
   }
 
   /**
-   * Validate a Google user or create if they don't exist
+   * Handle Google OAuth authentication
+   * If email ends with admin.com, assign ADMIN role
    */
   async validateOrCreateGoogleUser(googleUserDto: GoogleUserDto): Promise<any> {
-    // Check if user exists
     let user = await this.usersService.findByEmail(googleUserDto.email);
     
     if (user) {
-      // Update Google ID if not already set
+      // Update existing user with Google info if needed
       if (!user.googleId) {
         user = await this.usersService.update(user.id, {
           googleId: googleUserDto.googleId,
-          isEmailVerified: true, // Auto-verify email for Google accounts
+          isEmailVerified: true,
         });
       }
     } else {
@@ -84,34 +131,50 @@ export class AuthService {
         avatarUrl: googleUserDto.avatarUrl,
         googleId: googleUserDto.googleId,
         isEmailVerified: true,
-        // Generate a secure random password for users that register with OAuth
         password: Math.random().toString(36).slice(-10) + Math.random().toString(36).slice(-10),
       };
       
       user = await this.usersService.create(newUser);
+      
+      // Automatically assign ADMIN role if email domain matches
+      if (googleUserDto.email.endsWith('admin.com')) {
+        const adminRole = await this.rolesService.findByName('admin');
+        if (adminRole) {
+          await this.usersService.assignRoles(user.id, [adminRole.id]);
+        }
+      }
     }
     
-    // Update last login timestamp
     await this.usersService.updateLastLogin(user.id);
     
     return user;
   }
 
-   generateTokens(user: any) {
-    // Extract just the role names from the user's roles
-    const roleNames = user.roles ? user.roles.map(role => role.name) : [];
+  generateTokens(user: any) {
+    // Extract roles properly, supporting both string roles and role objects
+    const roles = user.roles ? 
+      user.roles.map(role => typeof role === 'object' ? role.name : role) : 
+      [];
     
-    // Simplified payload with just the essential information
+    // Create JWT payload
     const payload = { 
       email: user.email, 
       sub: user.id, 
-      roles: roleNames // Only include role names, not full role objects
+      roles
     };
     
+    // Get JWT secret
+    const secret = this.configService.get<string>('JWT_SECRET') || 'your-secret-key';
+    
+    // Generate tokens with longer expiration
     return {
-      accessToken: this.jwtService.sign(payload),
+      accessToken: this.jwtService.sign(payload, {
+        secret: secret,
+        expiresIn: '24h',
+      }),
       refreshToken: this.jwtService.sign(payload, {
-        expiresIn: this.configService.get<string>('jwt.refreshExpiresIn'),
+        secret: secret,
+        expiresIn: '7d',
       }),
     };
   }
