@@ -3,12 +3,14 @@ import { PassportStrategy } from '@nestjs/passport';
 import { ExtractJwt, Strategy } from 'passport-jwt';
 import { ConfigService } from '@nestjs/config';
 import { UsersService } from '../../users/users.service';
+import { RolesService } from '../../roles/roles.service';
 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
   constructor(
     private configService: ConfigService,
     private usersService: UsersService,
+    private rolesService: RolesService,
   ) {
     super({
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
@@ -19,21 +21,40 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
 
   async validate(payload: any) {
     try {
-      // Check if user still exists in the database
-      const user = await this.usersService.findOne(payload.sub);
+      // Get full user with roles and permissions
+      const user = await this.usersService.findOneWithFullDetails(payload.sub);
       
       if (!user) {
         throw new UnauthorizedException('User not found');
       }
 
-      // Return a user object with essential data
+      // Get user roles with their permissions
+      const userRoles = await this.rolesService.findUserRoles(user.id);
+      
+      // Extract role names and all permissions from roles
+      const roleNames = userRoles.map(role => role.name);
+      const permissions = new Set<string>();
+      
+      userRoles.forEach(role => {
+        if (role.permissions) {
+          role.permissions.forEach(permission => permissions.add(permission.name));
+        }
+      });
+      
+      // Add debug logging
+      console.log(`User ${user.email} authenticated with roles: ${roleNames.join(', ')}`);
+      console.log(`User permissions: ${Array.from(permissions).join(', ')}`);
+
+      // Return enriched user object
       return {
-        id: payload.sub,
-        email: payload.email,
-        roles: payload.roles || [],
+        id: user.id,
+        email: user.email,
+        roles: roleNames,
+        permissions: Array.from(permissions)
       };
     } catch (error) {
-      throw new UnauthorizedException('Invalid user credentials');
+      console.error('JWT validation error:', error);
+      throw new UnauthorizedException('Invalid token');
     }
   }
 }

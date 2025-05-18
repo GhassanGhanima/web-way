@@ -150,23 +150,36 @@ export class AuthService {
     return user;
   }
 
-  generateTokens(user: any) {
-    // Extract roles properly, supporting both string roles and role objects
-    const roles = user.roles ? 
-      user.roles.map(role => typeof role === 'object' ? role.name : role) : 
-      [];
+  async generateTokens(user: any) {
+    // Ensure we have full user data with roles
+    let userWithRoles = user;
     
-    // Create JWT payload
+    // If the user doesn't have roles loaded, fetch them
+    if (!user.roles || !Array.isArray(user.roles) || user.roles.length === 0) {
+      const roles = await this.rolesService.findUserRoles(user.id);
+      userWithRoles = {
+        ...user,
+        roles: roles.map(role => role.name)
+      };
+      console.log(`Enriched user with roles: ${roles.map(r => r.name).join(', ')}`);
+    }
+    
+    // Create JWT payload with roles explicitly added
+    const roleNames = Array.isArray(userWithRoles.roles) 
+      ? userWithRoles.roles.map(role => typeof role === 'object' ? role.name : role)
+      : [];
+      
     const payload = { 
-      email: user.email, 
-      sub: user.id, 
-      roles
+      email: userWithRoles.email, 
+      sub: userWithRoles.id,
+      roles: roleNames
     };
     
-    // Get JWT secret
+    console.log('JWT payload:', payload);
+    
+    // Generate tokens
     const secret = this.configService.get<string>('JWT_SECRET') || 'your-secret-key';
     
-    // Generate tokens with longer expiration
     return {
       accessToken: this.jwtService.sign(payload, {
         secret: secret,

@@ -1,4 +1,4 @@
-import { Injectable, CanActivate, ExecutionContext } from '@nestjs/common';
+import { Injectable, CanActivate, ExecutionContext, ForbiddenException } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { ROLES_KEY, Role } from '@app/common/decorators/roles.decorator';
 
@@ -14,16 +14,36 @@ export class RolesGuard implements CanActivate {
       context.getClass(),
     ]);
     
-    if (!requiredRoles) {
+    if (!requiredRoles || requiredRoles.length === 0) {
       return true;
     }
     
     const { user } = context.switchToHttp().getRequest();
+    
+    // Detailed logging for debugging
+    console.log('RolesGuard - Required roles:', requiredRoles);
+    console.log('RolesGuard - User:', user ? `ID: ${user.id}, Email: ${user.email}` : 'No user');
+    console.log('RolesGuard - User roles:', user?.roles || 'None');
+    
     if (!user || !user.roles) {
-      return false;
+      console.log('RolesGuard - No user or roles found in request');
+      throw new ForbiddenException('User has no roles assigned');
     }
     
-    // Since roles in the token are now just string names, we can directly check them
-    return requiredRoles.some(role => user.roles.includes(role));
+    const hasRequiredRole = requiredRoles.some(role => 
+      user.roles.includes(role) || user.roles.some(userRole => 
+        typeof userRole === 'object' ? userRole.name === role : userRole === role
+      )
+    );
+    
+    console.log('RolesGuard - Has required role:', hasRequiredRole);
+    
+    if (!hasRequiredRole) {
+      throw new ForbiddenException(
+        `User lacks required role(s): ${requiredRoles.join(', ')}`
+      );
+    }
+    
+    return hasRequiredRole;
   }
 }
