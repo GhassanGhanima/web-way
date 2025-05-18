@@ -1,7 +1,8 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { BaseEntity } from '@app/common/entities/base.entity';
-import { Column, Entity, JoinColumn, ManyToOne } from 'typeorm';
+import { Column, Entity, JoinColumn, ManyToOne, OneToMany } from 'typeorm';
 import { User } from '@app/modules/users/entities/user.entity';
+import { WidgetConfig } from '@app/modules/widgets/entities/widget-config.entity';
 
 export enum IntegrationStatus {
   ACTIVE = 'active',
@@ -19,7 +20,7 @@ export class Integration extends BaseEntity {
   @Column()
   userId: string;
 
-  @ManyToOne(() => User)
+  @ManyToOne(() => User, user => user.integrations)
   @JoinColumn({ name: 'userId' })
   user: User;
 
@@ -39,7 +40,6 @@ export class Integration extends BaseEntity {
 
   @ApiProperty({
     description: 'API key for this integration',
-    example: 'api_1234567890abcdef',
   })
   @Column()
   apiKey: string;
@@ -94,4 +94,27 @@ export class Integration extends BaseEntity {
   })
   @Column({ type: 'timestamp with time zone', nullable: true })
   lastUsedAt: Date | null;
+
+  @ApiProperty({
+    description: 'Is this integration active',
+    example: true,
+  })
+  @Column({ default: true })
+  isActive: boolean;
+
+  @ApiProperty({
+    description: 'Domain verification code',
+  })
+  @Column({ nullable: true })
+  verificationCode: string;
+
+  @OneToMany(() => WidgetConfig, widgetConfig => widgetConfig.integration)
+  widgetConfigs: WidgetConfig[];
+
+  @ApiProperty({
+    description: 'Authorized URLs this integration can be used on',
+    type: [String],
+  })
+  @Column('simple-array', { nullable: true })
+  authorizedUrls: string[];
 }

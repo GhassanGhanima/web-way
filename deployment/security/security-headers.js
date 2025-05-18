@@ -30,7 +30,7 @@ const securityHeaders = [
   {
     key: 'Content-Security-Policy',
     value: `default-src 'self'; 
-      script-src 'self' 'unsafe-inline' https://js.stripe.com https://accessibility-tool.example.com; 
+      script-src 'self' 'unsafe-inline' https://js.stripe.com https://cdn.accessibility-tool.example.com https://api.accessibility-tool.example.com; 
       style-src 'self' 'unsafe-inline'; 
       img-src 'self' data: https:; 
       connect-src 'self' https://api.accessibility-tool.example.com https://*.stripe.com; 

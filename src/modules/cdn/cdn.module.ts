@@ -7,6 +7,7 @@ import { SubscriptionsModule } from '../subscriptions/subscriptions.module';
 import { IntegrationsModule } from '../integrations/integrations.module';
 import { RolesModule } from '../roles/roles.module';
 import { PermissionsModule } from '../permissions/permissions.module';
+import { WidgetsModule } from '../widgets/widgets.module';
 
 @Module({
   imports: [
@@ -15,6 +16,7 @@ import { PermissionsModule } from '../permissions/permissions.module';
     SubscriptionsModule,
     RolesModule,        // Import RolesModule to make RolesService available
     PermissionsModule,  // Import PermissionsModule for PermissionsGuard
+    WidgetsModule,     // Import WidgetsModule to make WidgetsService available
   ],
   controllers: [CdnController],
   providers: [CdnService],

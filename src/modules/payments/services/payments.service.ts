@@ -141,22 +141,28 @@ export class PaymentsService {
     }
   }
 
-  private mapStripeStatusToSubscriptionStatus(stripeStatus: string): SubscriptionStatus {
-    switch (stripeStatus) {
-      case 'active':
-        return SubscriptionStatus.ACTIVE;
-      case 'canceled':
-        return SubscriptionStatus.CANCELED;
-      case 'incomplete':
-      case 'incomplete_expired':
-        return SubscriptionStatus.PENDING;
-      case 'past_due':
-      case 'unpaid':
-        return SubscriptionStatus.EXPIRED;
-      case 'trialing':
-        return SubscriptionStatus.TRIAL;
-      default:
-        return SubscriptionStatus.PENDING;
-    }
+  /**
+ * Maps Stripe subscription status to our internal subscription status
+ * @param stripeStatus Status from Stripe
+ * @returns Corresponding SubscriptionStatus
+ */
+private mapStripeStatusToSubscriptionStatus(stripeStatus: string): SubscriptionStatus {
+  switch (stripeStatus) {
+    case 'active':
+      return SubscriptionStatus.ACTIVE;
+    case 'canceled':
+      return SubscriptionStatus.CANCELED;
+    case 'incomplete':
+    case 'incomplete_expired':
+      return SubscriptionStatus.PENDING;
+    case 'past_due':
+      return SubscriptionStatus.PAST_DUE;
+    case 'unpaid':
+      return SubscriptionStatus.UNPAID;
+    case 'trialing':
+      return SubscriptionStatus.TRIAL;
+    default:
+      return SubscriptionStatus.PENDING;
   }
+}
 }

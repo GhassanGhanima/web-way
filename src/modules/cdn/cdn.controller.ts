@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Param, Query, Headers, UseGuards, Version, Res, HttpStatus } from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, Query, Headers, UseGuards, Version, Res, HttpStatus, BadRequestException } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiQuery, ApiParam, ApiHeader } from '@nestjs/swagger';
 import { Response } from 'express';
 import { CdnService } from './cdn.service';
@@ -10,11 +10,15 @@ import { PermissionsGuard } from '../permissions/guards/permissions.guard';
 import { Roles, Role } from '@app/common/decorators/roles.decorator';
 import { Permissions, Permission } from '@app/common/decorators/permissions.decorator';
 import { CdnSecurityGuard } from './guards/cdn-security.guard';
+import { WidgetsService } from '../widgets/widgets.service';
 
 @ApiTags('cdn')
 @Controller('cdn')
 export class CdnController {
-  constructor(private readonly cdnService: CdnService) {}
+  constructor(
+    private readonly cdnService: CdnService,
+    private readonly widgetsService: WidgetsService,
+  ) {}
 
   @Get('scripts')
   @Version('1')
@@ -65,28 +69,88 @@ export class CdnController {
 
   @Get('loader.js')
   @Version('1')
-  @UseGuards(CdnSecurityGuard)
-  @ApiOperation({ summary: 'Get script loader' })
-  @ApiQuery({
-    name: 'apiKey',
-    required: true,
-    type: String,
-    description: 'Integration API key',
-  })
+  @ApiOperation({ summary: 'Get widget loader script' })
   @ApiResponse({
     status: 200,
-    description: 'Returns the script loader JavaScript',
+    description: 'Returns the widget loader JavaScript',
   })
-  async getLoader(
+  async getLoaderScript(
     @Query('apiKey') apiKey: string,
-    @Headers('origin') origin: string,
+    @Query('domain') domain: string,
     @Res() res: Response,
   ): Promise<void> {
-    const script = await this.cdnService.generateLoader(apiKey, origin);
+    if (!apiKey) {
+      throw new BadRequestException('API key is required');
+    }
     
-    res.setHeader('Content-Type', 'application/javascript');
-    res.setHeader('Cache-Control', 'public, max-age=3600');
-    res.status(HttpStatus.OK).send(script);
+    // Get domain from referer if not provided
+    if (!domain && res.req.headers.referer) {
+      try {
+        const url = new URL(res.req.headers.referer);
+        domain = url.hostname;
+      } catch (error) {
+        // If we can't parse the referrer, that's fine
+      }
+    }
+    
+    // Validate API key and domain
+    const validation = await this.widgetsService.validateDomainAndSubscription(apiKey, domain);
+    
+    if (!validation.isValid) {
+      // Return a script that displays an error message
+      const errorScript = this.cdnService.generateErrorScript(validation.message || 'Invalid API key');
+      res.type('application/javascript');
+      res.send(errorScript);
+      return;
+    }
+    
+    // Return the loader script
+    const script = await this.cdnService.getWidgetLoaderScript(apiKey, validation.widgetConfig);
+    res.type('application/javascript');
+    res.send(script);
+  }
+
+  @Get('widget.js')
+  @Version('1')
+  @ApiOperation({ summary: 'Get widget script' })
+  @ApiResponse({
+    status: 200,
+    description: 'Returns the widget JavaScript',
+  })
+  async getWidgetScript(
+    @Query('apiKey') apiKey: string,
+    @Res() res: Response,
+  ): Promise<void> {
+    if (!apiKey) {
+      throw new BadRequestException('API key is required');
+    }
+    
+    // Get domain from referer if available
+    let domain = '';
+    if (res.req.headers.referer) {
+      try {
+        const url = new URL(res.req.headers.referer);
+        domain = url.hostname;
+      } catch (error) {
+        // If we can't parse the referrer, that's fine
+      }
+    }
+    
+    // Validate API key and domain
+    const validation = await this.widgetsService.validateDomainAndSubscription(apiKey, domain);
+    
+    if (!validation.isValid) {
+      // Return a script that displays an error message
+      const errorScript = this.cdnService.generateErrorScript(validation.message || 'Invalid API key');
+      res.type('application/javascript');
+      res.send(errorScript);
+      return; // Just use return without a value
+    }
+    
+    // Return the widget script
+    const script = await this.cdnService.getWidgetScript(validation.widgetConfig);
+    res.type('application/javascript');
+    res.send(script);
   }
 
   @Get('scripts/:id')

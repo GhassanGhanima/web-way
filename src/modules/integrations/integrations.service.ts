@@ -100,6 +100,18 @@ export class IntegrationsService {
     return integration;
   }
 
+  /**
+   * Find all integrations for a specific user
+   * @param userId User ID to find integrations for
+   * @returns Array of integration entities
+   */
+  async findByUserId(userId: string): Promise<Integration[]> {
+    return this.integrationsRepository.find({
+      where: { userId },
+      relations: ['user'],
+    });
+  }
+
   private generateRandomString(length: number): string {
     return crypto.randomBytes(length).toString('hex').slice(0, length);
   }

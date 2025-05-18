@@ -1,20 +1,55 @@
+import { Column, Entity, ManyToOne, JoinColumn } from 'typeorm';
 import { ApiProperty } from '@nestjs/swagger';
 import { BaseEntity } from '@app/common/entities/base.entity';
-import { Column, Entity, JoinColumn, ManyToOne } from 'typeorm';
 import { User } from '@app/modules/users/entities/user.entity';
+import { Plan } from '@app/modules/plans/entities/plan.entity';
 
+/**
+ * Subscription status enum
+ *
+ * Represents the possible states a subscription can be in throughout its lifecycle
+ */
 export enum SubscriptionStatus {
+  /**
+   * Subscription is active and paid
+   */
   ACTIVE = 'active',
-  CANCELED = 'canceled',
-  EXPIRED = 'expired',
-  PENDING = 'pending',
+
+  /**
+   * Subscription is in trial period
+   */
   TRIAL = 'trial',
+
+  /**
+   * Payment is pending or being processed
+   */
+  PENDING = 'pending',
+
+  /**
+   * Payment is past due but subscription is still active
+   */
+  PAST_DUE = 'past_due',
+
+  /**
+   * Payment failed and subscription is no longer active
+   */
+  UNPAID = 'unpaid',
+
+  /**
+   * Subscription was canceled by the user
+   */
+  CANCELED = 'canceled',
+
+  /**
+   * Subscription has expired
+   */
+  EXPIRED = 'expired',
 }
 
 @Entity('subscriptions')
 export class Subscription extends BaseEntity {
   @ApiProperty({
-    description: 'Foreign key to the subscriber user',
+    description: 'User ID this subscription belongs to',
     example: '123e4567-e89b-12d3-a456-426614174000',
   })
   @Column()
@@ -25,16 +60,29 @@ export class Subscription extends BaseEntity {
   user: User;
 
   @ApiProperty({
-    description: 'Foreign key to the subscription plan',
-    example: '123e4567-e89b-12d3-a456-426614174001',
+    description: 'Plan ID for this subscription',
+    example: '123e4567-e89b-12d3-a456-426614174000',
   })
   @Column()
   planId: string;
+
+  @ManyToOne(() => Plan)
+  @JoinColumn({ name: 'planId' })
+  plan: Plan;
+
+  @ApiProperty({
+    description: 'External subscription ID (e.g., from payment provider)',
+    example: 'sub_1234567890',
+    required: false,
+  })
+  @Column({ nullable: true })
+  externalSubscriptionId?: string;
 
   @ApiProperty({
     description: 'Subscription status',
     enum: SubscriptionStatus,
     example: SubscriptionStatus.ACTIVE,
+    enumName: 'SubscriptionStatus',
   })
   @Column({
     type: 'enum',
@@ -45,64 +93,49 @@ export class Subscription extends BaseEntity {
 
   @ApiProperty({
     description: 'Start date of the subscription',
-    example: '2023-01-01T00:00:00Z',
   })
-  @Column({ type: 'timestamp with time zone' })
+  @Column()
   startDate: Date;
 
   @ApiProperty({
     description: 'End date of the subscription',
-    example: '2024-01-01T00:00:00Z',
+    required: false,
   })
-  @Column({ type: 'timestamp with time zone' })
+  @Column({ nullable: true })
   endDate: Date;
 
   @ApiProperty({
-    description: 'Renewal date for the subscription',
-    example: '2024-01-01T00:00:00Z',
+    description: 'Date when the subscription will renew',
+    required: false,
   })
-  @Column({ type: 'timestamp with time zone', nullable: true })
-  renewalDate: Date | null;
+  @Column({ nullable: true })
+  renewalDate?: Date;
 
   @ApiProperty({
-    description: 'Whether the subscription auto-renews',
+    description: 'Whether the subscription will automatically renew',
     example: true,
   })
   @Column({ default: true })
   autoRenew: boolean;
 
   @ApiProperty({
-    description: 'External payment provider subscription ID',
-    example: 'sub_1234567890',
+    description: 'Date when the subscription was canceled',
     required: false,
   })
-
-    @Column({
-    type: 'varchar',
-    length: 255,
-    nullable: true,
-  })
-  externalSubscriptionId?: string;
+  @Column({ nullable: true })
+  canceledAt?: Date;
 
   @ApiProperty({
-    description: 'Cancellation date if the subscription was canceled',
-    example: '2023-06-01T00:00:00Z',
-    required: false,
+    description: 'Maximum number of domains allowed',
+    example: 10,
   })
-  @Column({ type: 'timestamp with time zone', nullable: true })
-  canceledAt: Date | null;
+  @Column({ default: 1 })
+  maxDomains: number;
 
   @ApiProperty({
-    description: 'Notes about the subscription',
-    example: 'Customer requested annual billing',
-    required: false,
+    description: 'Maximum number of URLs allowed per domain',
+    example: 5,
   })
-
-      @Column({
-    type: 'varchar',
-    length: 255,
-    nullable: true,
-  })
-  notes?: string;
-  
+  @Column({ default: 1 })
+  maxUrlsPerDomain: number;
 }

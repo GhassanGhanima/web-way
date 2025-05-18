@@ -27,6 +27,7 @@ import { LoggingInterceptor } from './common/logging/logging.interceptor';
 import { ConfigModule as AppConfigModule } from './config/config.module';
 import { FaqModule } from './modules/faq/faq.module';
 import { ProductsModule } from './modules/products/products.module';
+import {WidgetsModule} from './modules/widgets/widgets.module';
 
 @Module({
   imports: [
@@ -55,6 +56,7 @@ import { ProductsModule } from './modules/products/products.module';
     PaymentsModule,
     IntegrationsModule,
     AnalyticsModule,
+    WidgetsModule,
     ReportsModule,
     AdminModule,
     CdnModule,

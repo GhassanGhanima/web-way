@@ -119,4 +119,16 @@ async updateLastLogin(userId: string): Promise<void> {
     lastLoginAt: new Date(),
   });
 }
+
+/**
+ * Find all users created by a specific admin user
+ * @param parentAdminId ID of the parent admin user
+ * @returns Array of user entities
+ */
+async findByParentAdmin(parentAdminId: string): Promise<User[]> {
+  return this.usersRepository.find({
+    where: { parentAdminId },
+    relations: ['roles', 'roles.permissions'],
+  });
+}
 }

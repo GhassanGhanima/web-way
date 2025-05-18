@@ -9,11 +9,13 @@ import { ScriptAsset, ScriptType } from './entities/script-asset.entity';
 import { CreateScriptAssetDto } from './dtos/create-script-asset.dto';
 import { SubscriptionsService } from '../subscriptions/subscriptions.service';
 import { IntegrationsService } from '../integrations/integrations.service';
+import { WidgetConfig } from '../widgets/entities/widget-config.entity';
 
 @Injectable()
 export class CdnService {
   private readonly scriptStoragePath: string;
-
+  private readonly basePath: string;
+  
   constructor(
     @InjectRepository(ScriptAsset)
     private scriptAssetsRepository: Repository<ScriptAsset>,
@@ -22,6 +24,7 @@ export class CdnService {
     private subscriptionsService: SubscriptionsService,
   ) {
     this.scriptStoragePath = this.configService.get<string>('cdn.storagePath') || 'assets/scripts';
+    this.basePath = this.configService.get<string>('CDN_STORAGE_PATH') || 'assets/scripts';
   }
 
   async findAllScripts(type?: ScriptType, activeOnly = true): Promise<ScriptAsset[]> {
@@ -202,5 +205,80 @@ export class CdnService {
       .createHmac('sha256', secretKey)
       .update(JSON.stringify(payload))
       .digest('hex') + '.' + Buffer.from(JSON.stringify(payload)).toString('base64');
+  }
+
+  async getWidgetLoaderScript(apiKey: string, widgetConfig?: WidgetConfig): Promise<string> {
+    try {
+      // Read the loader script template
+      const loaderPath = path.join(process.cwd(), this.basePath, 'loader.js');
+      let script = await fs.readFile(loaderPath, 'utf8');
+      
+      // Replace placeholders
+      script = script.replace(/\$\{API_KEY\}/g, apiKey);
+      script = script.replace(/\$\{CDN_BASE_URL\}/g, this.configService.get<string>('CDN_BASE_URL') || '');
+      
+      return script;
+    } catch (error) {
+      console.error('Error loading widget script:', error);
+      return `console.error("Failed to load accessibility widget script");`;
+    }
+  }
+
+  /**
+   * Get the widget script with configuration
+   * @param widgetConfig Widget configuration or undefined
+   * @returns Widget script as string
+   */
+  async getWidgetScript(widgetConfig?: WidgetConfig): Promise<string> {
+    try {
+      // Read the widget script template
+      const widgetPath = path.join(process.cwd(), this.basePath, 'accessibility-widget.js');
+      let script = await fs.readFile(widgetPath, 'utf8');
+      
+      // If no config provided, use default config
+      const defaultConfig = {
+        position: 'bottom-right',
+        theme: 'auto',
+        features: {
+          contrast: true,
+          fontSize: true,
+          readingGuide: true,
+          textToSpeech: true,
+          keyboardNavigation: true,
+        },
+        featureOrder: ['contrast', 'fontSize', 'readingGuide', 'textToSpeech', 'keyboardNavigation'],
+        customCss: '', // Add this property to fix the TypeScript error
+      };
+      
+      const config = widgetConfig || defaultConfig;
+      
+      // Create configuration object to inject
+      const configJson = JSON.stringify({
+        position: config.position,
+        theme: config.theme,
+        features: config.features,
+        featureOrder: config.featureOrder,
+      });
+      
+      // Replace configuration placeholder
+      script = script.replace(/\/\* \$\{WIDGET_CONFIG\} \*\//g, `const WIDGET_CONFIG = ${configJson};`);
+      
+      // Add custom CSS if available
+      if (config.customCss) {
+        script = script.replace(/\/\* \$\{CUSTOM_CSS\} \*\//g, config.customCss);
+      }
+      
+      return script;
+    } catch (error) {
+      console.error('Error loading widget script:', error);
+      return `console.error("Failed to load accessibility widget script");`;
+    }
+  }
+
+  generateErrorScript(errorMessage: string): string {
+    return `
+      console.error("Accessibility Widget Error: ${errorMessage}");
+      window.AccessibilityToolError = "${errorMessage}";
+    `;
   }
 }

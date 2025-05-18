@@ -1,9 +1,10 @@
-import { BeforeInsert, Column, Entity, ManyToMany, JoinTable } from 'typeorm';
+import { BeforeInsert, Column, Entity, ManyToMany, OneToMany, JoinTable, ManyToOne } from 'typeorm';
 import { Exclude } from 'class-transformer';
 import { ApiProperty } from '@nestjs/swagger';
 import * as bcrypt from 'bcrypt';
 import { BaseEntity } from '@app/common/entities/base.entity';
 import { Role } from '@app/modules/roles/entities/role.entity';
+import { Integration } from '@app/modules/integrations/entities/integration.entity';
 
 @Entity('users')
 export class User extends BaseEntity {
@@ -72,6 +73,48 @@ export class User extends BaseEntity {
   })
   @Column({ nullable: true })
   lastLoginAt?: Date;
+
+  @ApiProperty({
+    description: 'Parent admin user (for users created by admins)',
+    required: false,
+  })
+  @Column({ nullable: true })
+  parentAdminId: string;
+
+  @ManyToOne(() => User, user => user.childUsers)
+  parentAdmin: User;
+
+  @OneToMany(() => User, user => user.parentAdmin)
+  childUsers: User[];
+
+  @ApiProperty({
+    description: 'Company name (for admin users)',
+    example: 'Acme Corporation',
+    required: false,
+  })
+  @Column({ nullable: true })
+  companyName: string;
+
+  @ApiProperty({
+    description: 'URLs that this user can use widgets on',
+    type: [String],
+    required: false,
+  })
+  @Column('simple-array', { nullable: true })
+  authorizedUrls: string[];
+
+  @ApiProperty({
+    description: 'Is this account active',
+    example: true,
+  })
+  @Column({ default: true })
+  isActive: boolean;
+
+  /**
+   * Integrations associated with this user
+   */
+  @OneToMany(() => Integration, integration => integration.user)
+  integrations: Integration[];
 
   @BeforeInsert()
   async hashPassword() {
